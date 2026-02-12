@@ -7,6 +7,7 @@ import { getPostHandler } from './handlers/get-post.handler';
 import { postInputDtoValidation } from '../validation/postInputDtoValidation';
 import { updatePostHandler } from './handlers/update-post.handler';
 import { deletePostHandler } from './handlers/delete-post.handler';
+import { superAdminGuardMiddleware } from '../../../middlewares/super-admin.guard-middleware';
 
 export const postsRouter = Router({});
 
@@ -14,10 +15,12 @@ postsRouter.get('', getAllPostsHandler)
   .get('/:id', idValidation, inputValidationResultMiddleware, getPostHandler)
  .post(
     '',
-    createPostHandler,
+    superAdminGuardMiddleware,
+    createPostHandler
   )
   .put(
       '/:id',
+      superAdminGuardMiddleware,
       idValidation,
       postInputDtoValidation,
       inputValidationResultMiddleware,
@@ -25,6 +28,7 @@ postsRouter.get('', getAllPostsHandler)
     )
     .delete(
       '/:id',
+      superAdminGuardMiddleware,
       idValidation,
       inputValidationResultMiddleware,
       deletePostHandler,
