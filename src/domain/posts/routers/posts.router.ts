@@ -22,7 +22,6 @@ postsRouter.get('', getAllPostsHandler)
       '/:id',
       superAdminGuardMiddleware,
       idValidation,
-      postInputDtoValidation,
       inputValidationResultMiddleware,
       updatePostHandler,
     )

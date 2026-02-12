@@ -25,8 +25,6 @@ blogRouter
     '/:id',
     superAdminGuardMiddleware,
     idValidation,
-    blogInputDtoValidation,
-    inputValidationResultMiddleware,
     updateBlogHandler,
   )
   .delete(

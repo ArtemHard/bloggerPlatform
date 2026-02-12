@@ -1,4 +1,4 @@
-import request from 'supertest';
+import * as supertest from 'supertest';
 import express from 'express';
 import { setupApp } from '../../../setup-app';
 import { HttpStatus } from '../../../core/types/http-statuses';
@@ -16,12 +16,16 @@ describe('Driver API', () => {
       'https://samurai.it-incubator.io/lessons/lessons/view/63076d36e5fc0a055534e417',
   };
 
+  function auth() {
+    return supertest.agent(app).auth('admin', 'qwerty', { type: 'basic' });
+  }
+  
   beforeAll(async () => {
-    await request(app).delete('/testing/all-data').expect(HttpStatus.NoContent);
+    await auth().delete('/testing/all-data').expect(HttpStatus.NoContent);
   });
 
   it('should create blog; POST blog', async () => {
-    await request(app)
+    await auth()
       .post(BLOGS_PATH)
       .send(testBlogData)
       .expect(HttpStatus.Created);
@@ -34,23 +38,23 @@ describe('Driver API', () => {
       websiteUrl: '//123',
     };
 
-    await request(app)
+    await auth()
       .post(BLOGS_PATH)
       .send(newPost)
       .expect(HttpStatus.BadRequest);
   });
   it('should return drivers list; GET /drivers', async () => {
-    await request(app)
+    await auth()
       .post(BLOGS_PATH)
       .send({ ...testBlogData, name: 'Another Driver' })
       .expect(HttpStatus.Created);
 
-    await request(app)
+    await auth()
       .post(BLOGS_PATH)
       .send({ ...testBlogData, name: 'Another Driver2' })
       .expect(HttpStatus.Created);
 
-    const driverListResponse = await request(app)
+    const driverListResponse = await auth()
       .get(BLOGS_PATH)
       .expect(HttpStatus.Ok);
 
@@ -59,12 +63,12 @@ describe('Driver API', () => {
   });
 
   it('should return Blog by id; GET /blogs/:id', async () => {
-    const createResponse = await request(app)
+    const createResponse = await auth()
       .post(BLOGS_PATH)
       .send({ ...testBlogData, name: 'Another Blog' })
       .expect(HttpStatus.Created);
 
-    const getResponse = await request(app)
+    const getResponse = await auth()
       .get(`${BLOGS_PATH}/${createResponse.body.id}`)
       .expect(HttpStatus.Ok);
 

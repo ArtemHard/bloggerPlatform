@@ -1,4 +1,4 @@
-import request from 'supertest';
+import * as supertest from 'supertest';
 import express from 'express';
 import { setupApp } from '../../../setup-app';
 import { HttpStatus } from '../../../core/types/http-statuses';
@@ -13,6 +13,11 @@ describe('Driver API', () => {
 
   const app = express();
   setupApp(app);
+
+  
+function auth() {
+  return supertest.agent(app).auth('admin', 'qwerty', { type: 'basic' });
+}
 
   const testBlogData: BlogInputDto = {
     name: 'Valentin Blog',
@@ -29,9 +34,9 @@ describe('Driver API', () => {
   };
 
   beforeAll(async () => {
-    await request(app).delete('/testing/all-data').expect(HttpStatus.NoContent);
+    await auth().delete('/testing/all-data').expect(HttpStatus.NoContent);
 
-    const { body } = await request(app)
+    const { body } = await auth()
       .post(BLOGS_PATH)
       .send(testBlogData)
       .expect(HttpStatus.Created);
@@ -39,7 +44,7 @@ describe('Driver API', () => {
     blog.id = body.id;
     blog.name = body.name;
 
-    const { body: postResponse } = await request(app)
+    const { body: postResponse } = await auth()
       .post(POSTS_PATH)
       .send({ ...testPostData, blogId: blog.id })
       .expect(HttpStatus.Created);
@@ -47,7 +52,7 @@ describe('Driver API', () => {
   });
 
   it('should create post for blog; POST post', async () => {
-    await request(app)
+    await auth()
       .post(POSTS_PATH)
       .send({ ...testPostData, blogId: blog.id })
       .expect(HttpStatus.Created);
@@ -66,17 +71,17 @@ describe('Driver API', () => {
   //     .expect(HttpStatus.BadRequest);
   // });
   it('should return post list; GET /posts', async () => {
-    await request(app)
+    await auth()
       .post(POSTS_PATH)
       .send({ ...testPostData, name: 'Another Driver', blogId: blog.id })
       .expect(HttpStatus.Created);
 
-    await request(app)
+    await auth()
       .post(POSTS_PATH)
       .send({ ...testPostData, name: 'Another Driver2', blogId: blog.id })
       .expect(HttpStatus.Created);
 
-    const driverListResponse = await request(app)
+    const driverListResponse = await auth()
       .get(POSTS_PATH)
       .expect(HttpStatus.Ok);
 
@@ -86,7 +91,7 @@ describe('Driver API', () => {
   });
 
   it('should return post by id; GET /blogs/:id', async () => {
-    const getResponse = await request(app)
+    const getResponse = await auth()
       .get(`${POSTS_PATH}/${postid}`)
       .expect(HttpStatus.Ok);
 
