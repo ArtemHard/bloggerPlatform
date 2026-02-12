@@ -1,0 +1,76 @@
+import request from 'supertest';
+import express from 'express';
+import { setupApp } from '../../../setup-app';
+import { HttpStatus } from '../../../core/types/http-statuses';
+import { BlogInputDto } from '../../../domain/blog/dto/blog.input-dto';
+import { BLOGS_PATH } from '../../../core/paths/paths';
+
+describe('Driver API', () => {
+  const app = express();
+  setupApp(app);
+
+  const testBlogData: BlogInputDto = {
+    name: 'Valentin Blog',
+    description: 'test 123',
+    websiteUrl:
+      'https://samurai.it-incubator.io/lessons/lessons/view/63076d36e5fc0a055534e417',
+  };
+
+  beforeAll(async () => {
+    await request(app).delete('/testing/all-data').expect(HttpStatus.NoContent);
+  });
+
+  it('should create blog; POST blog', async () => {
+    await request(app)
+      .post(BLOGS_PATH)
+      .send(testBlogData)
+      .expect(HttpStatus.Created);
+  });
+
+  it('should fail create blog with broken website; POST blog', async () => {
+    const newPost: BlogInputDto = {
+      name: 'Feodor',
+      description: 'test 123',
+      websiteUrl: '//123',
+    };
+
+    await request(app)
+      .post(BLOGS_PATH)
+      .send(newPost)
+      .expect(HttpStatus.BadRequest);
+  });
+  it('should return drivers list; GET /drivers', async () => {
+    await request(app)
+      .post(BLOGS_PATH)
+      .send({ ...testBlogData, name: 'Another Driver' })
+      .expect(HttpStatus.Created);
+
+    await request(app)
+      .post(BLOGS_PATH)
+      .send({ ...testBlogData, name: 'Another Driver2' })
+      .expect(HttpStatus.Created);
+
+    const driverListResponse = await request(app)
+      .get(BLOGS_PATH)
+      .expect(HttpStatus.Ok);
+
+    expect(driverListResponse.body).toBeInstanceOf(Array);
+    expect(driverListResponse.body.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('should return Blog by id; GET /blogs/:id', async () => {
+    const createResponse = await request(app)
+      .post(BLOGS_PATH)
+      .send({ ...testBlogData, name: 'Another Blog' })
+      .expect(HttpStatus.Created);
+
+    const getResponse = await request(app)
+      .get(`${BLOGS_PATH}/${createResponse.body.id}`)
+      .expect(HttpStatus.Ok);
+
+    expect(getResponse.body).toEqual({
+      ...createResponse.body,
+      id: expect.any(String),
+    });
+  });
+});
