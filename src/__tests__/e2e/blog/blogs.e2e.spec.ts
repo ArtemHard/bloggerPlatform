@@ -19,16 +19,25 @@ describe('Driver API', () => {
   function auth() {
     return supertest.agent(app).auth('admin', 'qwerty', { type: 'basic' });
   }
-  
+
   beforeAll(async () => {
     await auth().delete('/testing/all-data').expect(HttpStatus.NoContent);
   });
 
   it('should create blog; POST blog', async () => {
-    await auth()
+    await auth().post(BLOGS_PATH).send(testBlogData).expect(HttpStatus.Created);
+  });
+
+  it('should return error with empty name and website; POST blog', async () => {
+    const returnData = await auth()
       .post(BLOGS_PATH)
-      .send(testBlogData)
-      .expect(HttpStatus.Created);
+      .send({ name: '    ', websiteUrl: '', description: 'description' })
+      .expect(HttpStatus.BadRequest);
+
+    expect(returnData.body.errorsMessages).toEqual([
+      { message: expect.any(String), field: 'name' },
+      { message: expect.any(String), field: 'websiteUrl' },
+    ]);
   });
 
   it('should fail create blog with broken website; POST blog', async () => {
@@ -38,10 +47,7 @@ describe('Driver API', () => {
       websiteUrl: '//123',
     };
 
-    await auth()
-      .post(BLOGS_PATH)
-      .send(newPost)
-      .expect(HttpStatus.BadRequest);
+    await auth().post(BLOGS_PATH).send(newPost).expect(HttpStatus.BadRequest);
   });
   it('should return drivers list; GET /drivers', async () => {
     await auth()
