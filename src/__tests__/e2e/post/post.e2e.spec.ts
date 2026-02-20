@@ -9,11 +9,12 @@ import { Blog } from '../../../domain/blog/validation/types/blog';
 import { runDB, stopDb } from '../../../db/mongo.db';
 import { SETTINGS } from '../../../core/settings/settings';
 import { clearDb } from '../../../core/utils/clear-db';
-import { log } from 'node:console';
+
+const createdAtRegex = /\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)/;
 
 describe('Post API', () => {
   let blog: Blog & { id: string } = {} as Blog & { id: string };
-  let postid = '';
+  let postId = '';
 
   const app = express();
   setupApp(app);
@@ -25,21 +26,18 @@ describe('Post API', () => {
   const testBlogData: BlogInputDto = {
     name: 'Valentin Blog',
     description: 'test 123',
-    websiteUrl:
-      'https://samurai.it-incubator.io/lessons/lessons/view/63076d36e5fc0a055534e417',
+    websiteUrl: 'https://samurai.it-incubator.io/lessons/lessons/view/63076d36e5fc0a055534e417',
   };
 
   const testPostData: Omit<PostInputDto, 'blogId'> = {
     title: 'Valentin Blog',
     shortDescription: 'test 123',
-    content:
-      'https://samurai.it-incubator.io/lessons/lessons/view/63076d36e5fc0a055534e417',
+    content: 'https://samurai.it-incubator.io/lessons/lessons/view/63076d36e5fc0a055534e417',
   };
 
   beforeAll(async () => {
     await runDB(SETTINGS.MONGO_URL);
     await clearDb(app);
-
     await auth().delete('/testing/all-data').expect(HttpStatus.NoContent);
 
     const { body } = await auth()
@@ -49,67 +47,77 @@ describe('Post API', () => {
 
     blog.id = body.id;
     blog.name = body.name;
-
-    const { body: postResponse } = await auth()
-      .post(POSTS_PATH)
-      .send({ ...testPostData, blogId: blog.id })
-      .expect(HttpStatus.Created);
-    postid = postResponse.id
   }, 15000);
 
   afterAll(async () => {
     await stopDb();
   });
 
-  it('should create post for blog; POST post', async () => {
-    await auth()
+  // Основной тест: создание поста + проверка createdAt
+  it('should create post for blog and return createdAt field; POST /posts', async () => {
+    const createResponse = await auth()
       .post(POSTS_PATH)
       .send({ ...testPostData, blogId: blog.id })
       .expect(HttpStatus.Created);
-  });
 
-  // it.skip('should fail create blog with broken website; POST blog', async () => {
-  //   const newPost: BlogInputDto = {
-  //     name: 'Feodor',
-  //     description: 'test 123',
-  //     websiteUrl: '//123',
-  //   };
+    const createdPost = createResponse.body;
 
-  //   await request(app)
-  //     .post(BLOGS_PATH)
-  //     .send(newPost)
-  //     .expect(HttpStatus.BadRequest);
-  // });
-  it('should return post list; GET /posts', async () => {
-    await auth()
-      .post(POSTS_PATH)
-      .send({ ...testPostData, name: 'Another Driver', blogId: blog.id })
-      .expect(HttpStatus.Created);
+    // Сохраняем ID для дальнейших тестов
+    postId = createdPost.id;
 
-    await auth()
-      .post(POSTS_PATH)
-      .send({ ...testPostData, name: 'Another Driver2', blogId: blog.id })
-      .expect(HttpStatus.Created);
-
-    const driverListResponse = await auth()
-      .get(POSTS_PATH)
-      .expect(HttpStatus.Ok);
-
-    expect(driverListResponse.body).toBeInstanceOf(Array);
-
-    expect(driverListResponse.body.length).toBeGreaterThanOrEqual(2);
-  });
-
-  it('should return post by id; GET /blogs/:id', async () => {
-    const getResponse = await auth()
-      .get(`${POSTS_PATH}/${postid}`)
-      .expect(HttpStatus.Ok);
-
-    expect(getResponse.body).toEqual({
-      ...testPostData,
+    // Проверяем структуру и наличие полей
+    expect(createdPost).toEqual({
+      id: expect.any(String),
+      title: testPostData.title,
+      shortDescription: testPostData.shortDescription,
+      content: testPostData.content,
       blogId: blog.id,
       blogName: blog.name,
-      id: expect.any(String),
+      createdAt: expect.stringMatching(createdAtRegex),
+    });
+
+    // Дополнительно: проверим, что дата не в будущем
+    const createdAtDate = new Date(createdPost.createdAt);
+    expect(createdAtDate.getTime()).toBeLessThanOrEqual(Date.now() + 1000);
+  });
+
+  // Проверка получения поста по ID
+  it('should return created post by id with correct createdAt; GET /posts/:id', async () => {
+    const getResponse = await auth()
+      .get(`${POSTS_PATH}/${postId}`)
+      .expect(HttpStatus.Ok);
+
+    const post = getResponse.body;
+
+    expect(post).toEqual({
+      id: postId,
+      title: testPostData.title,
+      shortDescription: testPostData.shortDescription,
+      content: testPostData.content,
+      blogId: blog.id,
+      blogName: blog.name,
+      createdAt: expect.stringMatching(createdAtRegex),
     });
   });
+
+  // Проверка списка постов
+  it('should return list of posts with createdAt; GET /posts', async () => {
+    await auth()
+      .post(POSTS_PATH)
+      .send({ ...testPostData, title: 'Another Post', blogId: blog.id })
+      .expect(HttpStatus.Created);
+
+    const response = await auth().get(POSTS_PATH).expect(HttpStatus.Ok);
+    const posts = response.body;
+
+    expect(Array.isArray(posts)).toBe(true);
+    expect(posts.length).toBeGreaterThanOrEqual(2);
+
+    for (const post of posts) {
+      expect(post).toHaveProperty('createdAt');
+      expect(typeof post.createdAt).toBe('string');
+      expect(post.createdAt).toMatch(createdAtRegex);
+    }
+  });
 });
+

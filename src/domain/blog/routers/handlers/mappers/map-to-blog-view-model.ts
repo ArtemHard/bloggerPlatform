@@ -7,5 +7,7 @@ export function mapToBlogViewModel(driver: WithId<Blog>): BlogViewModel {
     name: driver.name,
     description: driver.description,
     websiteUrl: driver.websiteUrl,
+    createdAt: driver.createdAt,
+    isMembership: driver.isMembership,
   };
 }
