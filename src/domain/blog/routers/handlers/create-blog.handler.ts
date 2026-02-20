@@ -4,8 +4,9 @@ import { blogInputDtoValidation } from '../../validation/blogInputDtoValidation'
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
 import { blogsRepository } from '../../../repositories/blogs.repository';
+import { mapToBlogViewModel } from './mappers/map-to-blog-view-model';
 
-export const createBlogHandler = (
+export const createBlogHandler = async (
   req: Request<{}, {}, BlogInputDto>,
   res: Response,
 ) => {
@@ -17,7 +18,13 @@ export const createBlogHandler = (
     return res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
   }
 
-  const createdBlog = blogsRepository.create(attributes);
+  try {
+    const createdBlog = await blogsRepository.create(attributes);
 
-  res.status(HttpStatus.Created).send(createdBlog);
+     const createdBlogViewModel = mapToBlogViewModel(createdBlog);
+    
+    return res.status(HttpStatus.Created).send(createdBlogViewModel);
+  } catch (error) {
+    return res.status(HttpStatus.InternalServerError).send();
+  }
 };

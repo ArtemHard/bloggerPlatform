@@ -1,54 +1,76 @@
-import { id } from 'zod/v4/locales';
-import { generateUniqueID } from '../../core/utils/generate-id';
-import { db } from '../../db/in-memory.db';
 import { BlogInputDto } from '../blog/dto/blog.input-dto';
 import { Blog } from '../blog/validation/types/blog';
+import { ObjectId, WithId } from 'mongodb';
+import { blogsCollection } from '../../db/mongo.db';
 
 export const blogsRepository = {
   // Найти все blogs
-  findAllBlogs(): Blog[] {
-    return db.blogs.slice(-15);
+  async findAllBlogs(): Promise<WithId<Blog>[]> {
+    return blogsCollection.find().toArray();
   },
 
   // Найти blog по ID
-  findById(id: string): Blog | null {
-    const blog = db.blogs.find((blog) => blog.id === id);
-    return blog ? { ...blog } : null;
+  async findById(id: string): Promise<WithId<Blog> | null> {
+    return blogsCollection.findOne({ _id: new ObjectId(id) });
   },
 
   // Создать нового blog
-  create(blog:BlogInputDto): Blog {
+  async create(blog: BlogInputDto): Promise<WithId<Blog>> {
+    const createdAt = new Date().toISOString();
+    const isMembership = false;
 
-    const newBlog: Blog = {
-      id: generateUniqueID(db.blogs),
-      name: blog.name,
-      description: blog.description,
-      websiteUrl: blog.websiteUrl,
+    const insertResult = await blogsCollection.insertOne({
+      ...blog,
+      createdAt,
+      isMembership,
+    });
+
+    // Получаем полный документ из базы
+    const insertedBlog = await blogsCollection.findOne({
+      _id: insertResult.insertedId,
+    });
+
+    if (!insertedBlog) {
+      throw new Error('Failed to retrieve inserted blog');
     }
-    
-    db.blogs.push(newBlog);
-    return newBlog;
+
+    return insertedBlog;
   },
 
-  //   // Обновить о названии и авторе
-  update(blogIndex: number, dto: BlogInputDto): void {
-    const blog = db.blogs[blogIndex]
+  // Обновить о названии и авторе
+  async update(
+    blogId: string,
+    { description, name, websiteUrl }: BlogInputDto,
+  ): Promise<void> {
+    const updateResult = await blogsCollection.updateOne(
+      {
+        _id: new ObjectId(blogId),
+      },
+      {
+        $set: {
+          name,
+          description,
+          websiteUrl,
+          
+        },
+      },
+    );
 
-    db.blogs[blogIndex].name = dto.name;
-    db.blogs[blogIndex].description = dto.description;
-    db.blogs[blogIndex].websiteUrl = dto.websiteUrl;
-
+    if (updateResult.matchedCount < 1) {
+      throw new Error('Blog not exist');
+    }
     return;
   },
 
   // Удалить blog
-  delete(id: string): undefined | number {
-     const index = db.blogs.findIndex((blog) => blog.id === id);
+  async delete(id: string): Promise<void> {
+    const deleteResult = await blogsCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
 
-     if (index !== -1) {
-       db.blogs.splice(index, 1);
-       return index;
-     }
-    return 
+    if (deleteResult.deletedCount < 1) {
+      throw new Error('Driver not exist');
+    }
+    return;
   },
 };

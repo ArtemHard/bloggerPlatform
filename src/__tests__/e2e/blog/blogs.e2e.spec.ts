@@ -4,8 +4,11 @@ import { setupApp } from '../../../setup-app';
 import { HttpStatus } from '../../../core/types/http-statuses';
 import { BlogInputDto } from '../../../domain/blog/dto/blog.input-dto';
 import { BLOGS_PATH } from '../../../core/paths/paths';
+import { runDB, stopDb } from '../../../db/mongo.db';
+import { SETTINGS } from '../../../core/settings/settings';
+import { clearDb } from '../../../core/utils/clear-db';
 
-describe('Driver API', () => {
+describe('Blogs API', () => {
   const app = express();
   setupApp(app);
 
@@ -21,7 +24,12 @@ describe('Driver API', () => {
   }
 
   beforeAll(async () => {
-    await auth().delete('/testing/all-data').expect(HttpStatus.NoContent);
+    await runDB(SETTINGS.MONGO_URL);
+    await clearDb(app);
+  }, 15000);
+
+  afterAll(async () => {
+    await stopDb();
   });
 
   it('should create blog; POST blog', async () => {

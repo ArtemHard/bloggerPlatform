@@ -1,29 +1,35 @@
 import { Request, Response } from 'express';
-import { db } from '../../../../db/in-memory.db';
+import { BlogInputDto } from '../../dto/blog.input-dto';
+import { blogInputDtoValidation } from '../../validation/blogInputDtoValidation';
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
-import { blogInputDtoValidation } from '../../validation/blogInputDtoValidation';
 import { blogsRepository } from '../../../repositories/blogs.repository';
 
-export const updateBlogHandler = (req: Request<{ id: string }>, res: Response) => {
+export const updateBlogHandler = async (
+  req: Request<{ id: string }, {}, BlogInputDto>,
+  res: Response,
+) => {
+  const { id } = req.params;
+  const body = req.body;
 
-  const id = req.params.id
+  const blog = await blogsRepository.findById(id);
 
-  const blogIndex = db.blogs.findIndex((blog) => blog.id === id);
-
-  if (blogIndex === -1) {
+  if (!blog) {
     return res
       .status(HttpStatus.NotFound)
       .send(createErrorMessages([{ field: 'id', message: 'blog not found' }]));
   }
 
-  const errors = blogInputDtoValidation(req.body);
+  const errors = blogInputDtoValidation(body);
 
   if (errors.length > 0) {
     return res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
   }
 
-  blogsRepository.update(blogIndex, req.body)
-
-  return res.sendStatus(HttpStatus.NoContent);
+  try {
+    await blogsRepository.update(id, body);
+    return res.sendStatus(HttpStatus.NoContent);
+  } catch (error) {
+    return res.status(HttpStatus.InternalServerError).send();
+  }
 };

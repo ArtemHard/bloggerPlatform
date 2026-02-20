@@ -1,40 +1,78 @@
-import { generateUniqueID } from '../../core/utils/generate-id';
-import { db } from '../../db/in-memory.db';
-import { Post } from '../blog/validation/types/posts';
 import { PostInputDto } from '../posts/dto/post.input-dto';
+import { Post } from '../blog/validation/types/posts';
+import { ObjectId, WithId } from 'mongodb';
+import { blogsCollection, postsCollection } from '../../db/mongo.db';
 
 export const postsRepository = {
-  // Найти все blogs
-  findAllPosts(): Post[] {
-    return db.posts;
+  // Найти все posts
+  async findAllPosts(): Promise<WithId<Post>[]> {
+    return postsCollection.find().toArray();
   },
 
-  // Найти видео по ID
-  findById(id: string): Post | null {
-    return db.posts.find((d) => d.id === id) ?? null;
+  // Найти post по ID
+  async findById(id: string): Promise<WithId<Post> | null> {
+    try {
+      return await postsCollection.findOne({ _id: new ObjectId(id) });
+    } catch (error) {
+      return null;
+    }
   },
 
-  // Создать нового post
-  create(newPost: PostInputDto): Post {
-    const id = generateUniqueID(db.posts);
+  // Создать новый post
+  async create(dto: PostInputDto): Promise<WithId<Post>> {
+    const createdAt = new Date().toISOString();
     const blogName =
-      db.blogs.find((b) => b.id === newPost.blogId)?.name || 'Unknown Blog';
-    db.posts.push({ id, ...newPost, blogName });
+      (await blogsCollection.findOne({ _id: new ObjectId(dto.blogId) }))
+        ?.name || 'Unknown Blog';
 
-    return { ...newPost, id, blogName };
+    const newPost: Post = {
+      ...dto,
+      blogName,
+      createdAt,
+    };
+
+    const insertResult = await postsCollection.insertOne(newPost);
+    return { ...newPost, _id: insertResult.insertedId };
   },
 
-  update(postIndex: number, dto: PostInputDto): void {
-    db.posts[postIndex].title = dto.title;
-    db.posts[postIndex].shortDescription = dto.shortDescription;
-    db.posts[postIndex].content = dto.content;
-    db.posts[postIndex].blogId = dto.blogId;
+  // Обновить post по ID
+  async update(
+    id: string,
+    { title, shortDescription, content, blogId }: PostInputDto,
+  ): Promise<void> {
+    const blogName =
+      (await blogsCollection.findOne({ _id: new ObjectId(blogId) }))?.name ||
+      'Unknown Blog';
 
+    const updateResult = await postsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          title,
+          shortDescription,
+          content,
+          blogId,
+          blogName,
+        },
+      },
+    );
+
+    if (updateResult.matchedCount < 1) {
+      throw new Error('Post not found');
+    }
     return;
   },
 
-  // Удалить post
-  delete(index: number): undefined {
-    db.posts.splice(index, 1);
+  // Удалить post по ID
+  async delete(id: string): Promise<void> {
+    const deleteResult = await postsCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    if (deleteResult.deletedCount < 1) {
+      throw new Error('Post not found');
+    }
+
+    return;
   },
 };

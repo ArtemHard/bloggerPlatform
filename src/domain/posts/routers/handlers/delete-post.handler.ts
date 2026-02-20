@@ -2,23 +2,25 @@ import { Request, Response } from 'express';
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
 import { postsRepository } from '../../../repositories/posts.repository';
-import { db } from '../../../../db/in-memory.db';
 
-export const deletePostHandler = (
+export const deletePostHandler = async (
   req: Request<{ id: string }>,
   res: Response,
 ) => {
-  const id = req.params.id;
+  const { id } = req.params;
 
-  const index = db.posts.findIndex((post) => post.id === id);
+  const post = await postsRepository.findById(id);
 
-  if (index === -1) {
+  if (!post) {
     return res
       .status(HttpStatus.NotFound)
       .send(createErrorMessages([{ field: 'id', message: 'post not found' }]));
   }
 
-  postsRepository.delete(index);
-
-  return res.sendStatus(HttpStatus.NoContent);
+  try {
+    await postsRepository.delete(id);
+    return res.sendStatus(HttpStatus.NoContent);
+  } catch (error) {
+    return res.status(HttpStatus.InternalServerError).send();
+  }
 };

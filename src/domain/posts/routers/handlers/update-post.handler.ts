@@ -1,31 +1,35 @@
 import { Request, Response } from 'express';
-import { db } from '../../../../db/in-memory.db';
+import { PostInputDto } from '../../dto/post.input-dto';
+import { postInputDtoValidation } from '../../validation/postInputDtoValidation';
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
-
-import { blogsRepository } from '../../../repositories/blogs.repository';
-import { postInputDtoValidation } from '../../validation/postInputDtoValidation';
 import { postsRepository } from '../../../repositories/posts.repository';
 
-export const updatePostHandler = (req: Request<{ id: string }>, res: Response) => {
+export const updatePostHandler = async (
+  req: Request<{ id: string }, {}, PostInputDto>,
+  res: Response,
+) => {
+  const { id } = req.params;
+  const body = req.body;
 
-  const id = req.params.id
+  const post = await postsRepository.findById(id);
 
-  const postIndex = db.posts.findIndex((post) => post.id === id);
-
-  if (postIndex === -1) {
+  if (!post) {
     return res
       .status(HttpStatus.NotFound)
       .send(createErrorMessages([{ field: 'id', message: 'post not found' }]));
   }
 
-  const errors = postInputDtoValidation(req.body);
+  const errors = postInputDtoValidation(body);
 
   if (errors.length > 0) {
     return res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
   }
 
-  postsRepository.update(postIndex, req.body)
-
-  return res.sendStatus(HttpStatus.NoContent);
+  try {
+    await postsRepository.update(id, body);
+    return res.sendStatus(HttpStatus.NoContent);
+  } catch (error) {
+    return res.status(HttpStatus.InternalServerError).send();
+  }
 };

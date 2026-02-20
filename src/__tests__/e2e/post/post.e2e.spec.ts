@@ -6,18 +6,21 @@ import { BlogInputDto } from '../../../domain/blog/dto/blog.input-dto';
 import { BLOGS_PATH, POSTS_PATH } from '../../../core/paths/paths';
 import { PostInputDto } from '../../../domain/posts/dto/post.input-dto';
 import { Blog } from '../../../domain/blog/validation/types/blog';
+import { runDB, stopDb } from '../../../db/mongo.db';
+import { SETTINGS } from '../../../core/settings/settings';
+import { clearDb } from '../../../core/utils/clear-db';
+import { log } from 'node:console';
 
-describe('Driver API', () => {
-  let blog: Blog = {} as Blog;
+describe('Post API', () => {
+  let blog: Blog & { id: string } = {} as Blog & { id: string };
   let postid = '';
 
   const app = express();
   setupApp(app);
 
-  
-function auth() {
-  return supertest.agent(app).auth('admin', 'qwerty', { type: 'basic' });
-}
+  function auth() {
+    return supertest.agent(app).auth('admin', 'qwerty', { type: 'basic' });
+  }
 
   const testBlogData: BlogInputDto = {
     name: 'Valentin Blog',
@@ -34,6 +37,9 @@ function auth() {
   };
 
   beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
+    await clearDb(app);
+
     await auth().delete('/testing/all-data').expect(HttpStatus.NoContent);
 
     const { body } = await auth()
@@ -48,7 +54,11 @@ function auth() {
       .post(POSTS_PATH)
       .send({ ...testPostData, blogId: blog.id })
       .expect(HttpStatus.Created);
-    postid = postResponse.id;
+    postid = postResponse.id
+  }, 15000);
+
+  afterAll(async () => {
+    await stopDb();
   });
 
   it('should create post for blog; POST post', async () => {
