@@ -5,32 +5,47 @@ import { createBlogHandler } from './handlers/create-blog.handler';
 import { idValidation } from '../../../core/middlewars/validatinos';
 import { getBlogHandler } from './handlers/get-blog.handler';
 import { inputValidationResultMiddleware } from '../../../core/middlewars/input-validtion-result.middleware';
-import { blogInputDtoValidation } from '../validation/blogInputDtoValidation';
 import { updateBlogHandler } from './handlers/update-blog.handler';
 import { deleteBlogHandler } from './handlers/delete-blog.handler';
 import { superAdminGuardMiddleware } from '../../../middlewares/super-admin.guard-middleware';
+import { paginationAndSortingValidation } from '../../../core/middlewars/validation/query-pagination-sorting.validation-middleware';
+import { PostSortField } from '../../posts/routers/input/post-sort-field';
+import { getBlogPostsListHandler } from './handlers/get-blog-posts-list.handler';
+import { createBlogPostHandler } from './handlers/create-blog-post-handler';
 
 export const blogRouter = Router({});
 
 blogRouter
   //   .use(superAdminGuardMiddleware)
-  .get('', getAllBlogsHandler)
-  .get('/:id', idValidation, inputValidationResultMiddleware, getBlogHandler)
-  .post(
+  .get(
     '',
-    superAdminGuardMiddleware,
-    createBlogHandler,
+    paginationAndSortingValidation(PostSortField),
+    inputValidationResultMiddleware,
+     //@ts-expect-error  уже используете paginationAndSortingValidation перед хэндлером, и он гарантированно парсит поля в числа
+    getAllBlogsHandler,
   )
-  .put(
-    '/:id',
-    superAdminGuardMiddleware,
-    idValidation,
-    updateBlogHandler,
-  )
+  .get('/:id', idValidation, inputValidationResultMiddleware, getBlogHandler)
+  .post('', superAdminGuardMiddleware, createBlogHandler)
+  .put('/:id', superAdminGuardMiddleware, idValidation, updateBlogHandler)
   .delete(
     '/:id',
     superAdminGuardMiddleware,
     idValidation,
     inputValidationResultMiddleware,
     deleteBlogHandler,
+  )
+  .get(
+    '/:id/posts',
+    idValidation,
+    paginationAndSortingValidation(PostSortField),
+    inputValidationResultMiddleware,
+    //@ts-expect-error  уже используете paginationAndSortingValidation перед хэндлером, и он гарантированно парсит поля в числа
+    getBlogPostsListHandler,
+  )
+  .post(
+    '/:id/posts',
+    superAdminGuardMiddleware,
+    idValidation,
+    inputValidationResultMiddleware,
+    createBlogPostHandler,
   );

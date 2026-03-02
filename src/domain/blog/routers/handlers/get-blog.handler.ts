@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { blogsRepository } from '../../../repositories/blogs.repository';
-import { mapToBlogViewModel } from './mappers/map-to-blog-view-model';
+import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
 
 export const getBlogHandler = async (
   req: Request<{ id: string }>,

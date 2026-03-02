@@ -1,5 +1,5 @@
 import { WithId } from 'mongodb';
-import { Blog, BlogViewModel } from '../../../validation/types/blog';
+import { Blog, BlogViewModel } from '../../validation/types/blog';
 
 export function mapToBlogViewModel(driver: WithId<Blog>): BlogViewModel {
   return {

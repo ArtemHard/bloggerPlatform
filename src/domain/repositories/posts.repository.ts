@@ -2,20 +2,56 @@ import { PostInputDto } from '../posts/dto/post.input-dto';
 import { Post } from '../blog/validation/types/posts';
 import { ObjectId, WithId } from 'mongodb';
 import { blogsCollection, postsCollection } from '../../db/mongo.db';
+import { PostQueryInput } from '../posts/routers/input/post-query.input';
+import { RepositoryNotFoundError } from '../../core/errors/repository-not-found.error';
+import { log } from 'node:console';
+import { findPaginated } from '../../core/utils/pagination.util';
 
 export const postsRepository = {
   // Найти все posts
   async findAllPosts(): Promise<WithId<Post>[]> {
     return postsCollection.find().toArray();
   },
+  async findMany(
+    queryDto: PostQueryInput,
+  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    
+    const { pageNumber, pageSize, sortBy, sortDirection } = queryDto;
+    const filter = {};
+    const skip = (pageNumber - 1) * pageSize;
 
-  // Найти post по ID
+    const [items, totalCount] = await Promise.all([
+      postsCollection
+        .find(filter)
+        .sort({ [sortBy]: sortDirection })
+        .skip(skip)
+        .limit(pageSize)
+        .toArray(),
+      postsCollection.countDocuments(filter),
+    ]);
+    return { items, totalCount };
+  },
+
+  async findPostsByBlog(
+    queryDto: PostQueryInput,
+    blogId: string,
+  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+
+    return findPaginated<Post>(postsCollection, { blogId }, queryDto)
+  },
+
   async findById(id: string): Promise<WithId<Post> | null> {
-    try {
-      return await postsCollection.findOne({ _id: new ObjectId(id) });
-    } catch (error) {
-      return null;
+    return postsCollection.findOne({ _id: new ObjectId(id) });
+  },
+
+  async findByIdOrFail(id: string): Promise<WithId<Post>> {
+    const res = await postsCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!res) {
+      throw new Error('Post not found');
+      // throw new RepositoryNotFoundError('Post not exist');
     }
+    return res;
   },
 
   // Создать новый post

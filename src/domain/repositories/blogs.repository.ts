@@ -2,16 +2,53 @@ import { BlogInputDto } from '../blog/dto/blog.input-dto';
 import { Blog } from '../blog/validation/types/blog';
 import { ObjectId, WithId } from 'mongodb';
 import { blogsCollection } from '../../db/mongo.db';
+import { RepositoryNotFoundError } from '../../core/errors/repository-not-found.error';
+import { BlogQueryInput } from '../blog/routers/input/blog-query.input';
+import { parseQueryParams } from '../../core/utils/query-parser.util';
+import { findPaginated } from '../../core/utils/pagination.util';
 
 export const blogsRepository = {
   // Найти все blogs
-  async findAllBlogs(): Promise<WithId<Blog>[]> {
-    return blogsCollection.find().toArray();
+  async findAllBlogs(
+    queryDto: BlogQueryInput,
+  ): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
+
+    const { pageNumber, pageSize, sortBy, sortDirection, skip } =
+      parseQueryParams(queryDto);
+    const { searchNameTerm } = queryDto;
+
+    const filter: any = {};
+
+    if (searchNameTerm) {
+      filter.name = { $regex: searchNameTerm, $options: 'i' };
+    }
+
+    return findPaginated<Blog>(blogsCollection, filter, queryDto)
+    
+    // const items = await blogsCollection
+    //   .find(filter)
+    //   .sort({ [sortBy]: sortDirection })
+    //   .skip(skip)
+    //   .limit(pageSize)
+    //   .toArray();
+
+    // const totalCount = await blogsCollection.countDocuments(filter);
+
+    // return { items, totalCount };
   },
 
   // Найти blog по ID
   async findById(id: string): Promise<WithId<Blog> | null> {
     return blogsCollection.findOne({ _id: new ObjectId(id) });
+  },
+
+  async findByIdOrFail(id: string): Promise<WithId<Blog>> {
+    const res = await blogsCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!res) {
+      throw new RepositoryNotFoundError('Blog not exist');
+    }
+    return res;
   },
 
   // Создать нового blog
@@ -51,7 +88,6 @@ export const blogsRepository = {
           name,
           description,
           websiteUrl,
-          
         },
       },
     );

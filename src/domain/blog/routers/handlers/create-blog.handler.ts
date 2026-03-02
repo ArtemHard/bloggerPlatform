@@ -4,7 +4,7 @@ import { blogInputDtoValidation } from '../../validation/blogInputDtoValidation'
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
 import { blogsRepository } from '../../../repositories/blogs.repository';
-import { mapToBlogViewModel } from './mappers/map-to-blog-view-model';
+import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
 
 export const createBlogHandler = async (
   req: Request<{}, {}, BlogInputDto>,
