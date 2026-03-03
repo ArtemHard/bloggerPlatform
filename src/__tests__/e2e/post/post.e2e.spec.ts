@@ -108,7 +108,7 @@ describe('Post API', () => {
       .expect(HttpStatus.Created);
 
     const response = await auth().get(POSTS_PATH).expect(HttpStatus.Ok);
-    const posts = response.body;
+    const posts = response.body.items;
 
     expect(Array.isArray(posts)).toBe(true);
     expect(posts.length).toBeGreaterThanOrEqual(2);

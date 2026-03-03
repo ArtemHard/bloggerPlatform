@@ -2,17 +2,21 @@ import { Request, Response } from 'express';
 import { BlogQueryInput } from '../input/blog-query.input';
 import { blogService } from '../../application/blog.service';
 import { mapToBlogListPaginatedOutput } from '../mappers/map-to-blog-list-paginated-output';
+import { parseQueryParams } from '../../../../core/utils/query-parser.util';
 
 export const getAllBlogsHandler = async (
   req: Request<{}, {}, {}, BlogQueryInput>,
   res: Response,
 ) => {
   try {
+    //иначе в blogListOut пихает строки, а не числа, и тесты падают
+    const { pageNumber, pageSize } = parseQueryParams(req.query);
+
     const { items, totalCount } = await blogService.findMany(req.query);
 
     const blogListOut = mapToBlogListPaginatedOutput(items, {
-      pageNumber: req.query.pageNumber || 1,
-      pageSize: req.query.pageSize || 10,
+      pageNumber,
+      pageSize,
       totalCount,
     });
 

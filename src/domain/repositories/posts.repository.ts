@@ -9,13 +9,15 @@ import { findPaginated } from '../../core/utils/pagination.util';
 
 export const postsRepository = {
   // Найти все posts
-  async findAllPosts(): Promise<WithId<Post>[]> {
-    return postsCollection.find().toArray();
+  async findAllPosts(
+    queryDto: PostQueryInput,
+  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    return findPaginated<Post>(postsCollection, {}, queryDto);
   },
+
   async findMany(
     queryDto: PostQueryInput,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
-    
     const { pageNumber, pageSize, sortBy, sortDirection } = queryDto;
     const filter = {};
     const skip = (pageNumber - 1) * pageSize;
@@ -36,8 +38,7 @@ export const postsRepository = {
     queryDto: PostQueryInput,
     blogId: string,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
-
-    return findPaginated<Post>(postsCollection, { blogId }, queryDto)
+    return findPaginated<Post>(postsCollection, { blogId }, queryDto);
   },
 
   async findById(id: string): Promise<WithId<Post> | null> {

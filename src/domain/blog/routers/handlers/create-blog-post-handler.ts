@@ -4,6 +4,8 @@ import { errorsHandler } from '../../../../core/errors/errors.handler';
 import { PostInputDto } from '../../../posts/dto/post.input-dto';
 import { mapToPostViewModel } from '../../../posts/routers/handlers/mappers/map-to-post-view-model';
 import { HttpStatus } from '../../../../core/types/http-statuses';
+import { postInputDtoValidation } from '../../../posts/validation/postInputDtoValidation';
+import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
 
 export async function createBlogPostHandler(
   req: Request<{ id: string }, {}, Omit<PostInputDto, 'blogId'>>,
@@ -11,6 +13,14 @@ export async function createBlogPostHandler(
 ) {
   try {
     const blogId = req.params.id;
+
+    const errors = postInputDtoValidation({ ...req.body, blogId });
+
+    if (errors.length > 0) {
+      return res
+        .status(HttpStatus.BadRequest)
+        .send(createErrorMessages(errors));
+    }
 
     const response = await postsService.createPostByBlog(req.body, blogId);
 

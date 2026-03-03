@@ -9,6 +9,7 @@ export const postsService = {
   async findMany(
     queryDto: PostQueryInput,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    //TODO вернуть пагинацию
     return postsRepository.findMany(queryDto);
   },
 
@@ -25,6 +26,7 @@ export const postsService = {
     dto: Omit<PostInputDto, 'blogId'>,
     blogId: string,
   ): Promise<WithId<Post>> {
+
     await blogsRepository.findByIdOrFail(blogId);
 
     return postsRepository.create({ ...dto, blogId });
