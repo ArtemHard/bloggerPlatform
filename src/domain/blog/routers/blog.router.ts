@@ -12,6 +12,7 @@ import { paginationAndSortingValidation } from '../../../core/middlewars/validat
 import { PostSortField } from '../../posts/routers/input/post-sort-field';
 import { getBlogPostsListHandler } from './handlers/get-blog-posts-list.handler';
 import { createBlogPostHandler } from './handlers/create-blog-post-handler';
+import { BlogSortField } from './input/blog-sort-field';
 
 export const blogRouter = Router({});
 
@@ -19,7 +20,7 @@ blogRouter
   //   .use(superAdminGuardMiddleware)
   .get(
     '',
-    paginationAndSortingValidation(PostSortField),
+    paginationAndSortingValidation(BlogSortField),
     inputValidationResultMiddleware,
     //@ts-expect-error  уже используете paginationAndSortingValidation перед хэндлером, и он гарантированно парсит поля в числа
     getAllBlogsHandler,
