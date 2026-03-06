@@ -498,4 +498,79 @@ describe('Blogs API', () => {
         });
     });
   });
+
+describe('PUT /blogs/:id', () => {
+  it('should update blog by id; status 204', async () => {
+    // Шаг 1: Создаём блог через POST
+    const createResponse = await auth()
+      .post(BLOGS_PATH)
+      .send(testBlogData)
+      .expect(HttpStatus.Created);
+
+    const blogId = createResponse.body.id;
+log('blogId >>>>', blogId);
+    // Проверим, что блог создан
+    const getBeforeUpdate = await auth()
+      .get(`${BLOGS_PATH}/${blogId}`)
+      .expect(HttpStatus.Ok);
+
+    expect(getBeforeUpdate.body.name).toBe('Valentin Blog');
+
+    // Шаг 2: Обновляем блог через PUT
+    const updatedData = {
+      name: 'UpdBlog Name',
+      description: 'Updated description',
+      websiteUrl: 'https://updated-url.com',
+    };
+
+    await auth()
+      .put(`${BLOGS_PATH}/${blogId}`)
+      .send(updatedData)
+      . expect(HttpStatus.NoContent); // 204
+
+    // Шаг 3: Проверяем, что изменения сохранились
+    const getAfterUpdate = await auth()
+      .get(`${BLOGS_PATH}/${blogId}`)
+      .expect(HttpStatus.Ok);
+
+    expect(getAfterUpdate.body).toEqual({
+      id: blogId,
+      name: updatedData.name,
+      description: updatedData.description,
+      websiteUrl: updatedData.websiteUrl,
+      isMembership: false,
+      createdAt: expect.stringMatching(
+        /^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/,
+      ),
+    });
+  });
+
+  it('should return 400 if invalid data is provided in update', async () => {
+    const createResponse = await auth()
+      .post(BLOGS_PATH)
+      .send(testBlogData)
+      .expect(HttpStatus.Created);
+
+    const blogId = createResponse.body.id;
+
+    await auth()
+      .put(`${BLOGS_PATH}/${blogId}`)
+      .send({ name: '', websiteUrl: 'invalid-url' })
+      .expect(HttpStatus.BadRequest);
+  });
+
+  it('should return 404 if blog not found', async () => {
+    const nonExistentId = new ObjectId().toHexString();
+
+    await auth()
+      .put(`${BLOGS_PATH}/${nonExistentId}`)
+      .send({
+        name: 'Updated Name',
+        description: 'desc',
+        websiteUrl: 'https://example.com',
+      })
+      .expect(HttpStatus.NotFound);
+  });
+});
+  
 });

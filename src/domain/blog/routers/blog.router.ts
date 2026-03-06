@@ -21,12 +21,17 @@ blogRouter
     '',
     paginationAndSortingValidation(PostSortField),
     inputValidationResultMiddleware,
-     //@ts-expect-error  уже используете paginationAndSortingValidation перед хэндлером, и он гарантированно парсит поля в числа
+    //@ts-expect-error  уже используете paginationAndSortingValidation перед хэндлером, и он гарантированно парсит поля в числа
     getAllBlogsHandler,
   )
   .get('/:id', idValidation, inputValidationResultMiddleware, getBlogHandler)
   .post('', superAdminGuardMiddleware, createBlogHandler)
-  .put('/:id', superAdminGuardMiddleware, idValidation, updateBlogHandler)
+  .put(
+    '/:id',
+    idValidation,
+    superAdminGuardMiddleware,
+    updateBlogHandler,
+  )
   .delete(
     '/:id',
     superAdminGuardMiddleware,
