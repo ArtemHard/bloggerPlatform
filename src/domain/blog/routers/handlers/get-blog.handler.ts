@@ -6,7 +6,7 @@ export const getBlogHandler = async (
   req: Request<{ id: string }>,
   res: Response,
 ) => {
-  const { id } = req.params;
+  const { id,  } = req.params;
 
   try {
     const blog = await blogsRepository.findById(id);

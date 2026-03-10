@@ -20,6 +20,7 @@ export function errorsHandler(error: unknown, res: Response): void {
     return;
   }
 
+  
   // if (error instanceof DomainError) {
   //   const httpStatus = HttpStatus.UnprocessableEntity;
 
@@ -39,4 +40,12 @@ export function errorsHandler(error: unknown, res: Response): void {
 
   res.status(HttpStatus.InternalServerError);
   return;
+}
+
+
+export class ValidationError extends Error {
+  constructor(public errorsMessages: Array<{ field: string; message: string }>) {
+    super('Validation failed');
+    this.name = 'ValidationError';
+  }
 }

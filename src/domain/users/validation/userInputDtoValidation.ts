@@ -1,11 +1,11 @@
 import { ValidationError } from '../../../core/types/validationError';
-import { BlogInputDto } from '../dto/blog.input-dto';
-import { blogSchema } from './shemas/blog-shema';
+import { CreateUserDto } from '../types/create-user.dto';
+import { userSchema } from './shemas/user-shema';
 
-export const blogInputDtoValidation = (
-  data: BlogInputDto,
+export const userInputDtoValidation = (
+  data: CreateUserDto,
 ): ValidationError[] => {
-  const result = blogSchema.safeParse(data);
+  const result = userSchema.safeParse(data);
   if (result.success) {
     return [];
   }

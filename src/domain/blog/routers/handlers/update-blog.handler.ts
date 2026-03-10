@@ -12,7 +12,6 @@ export const updateBlogHandler = async (
 ) => {
   const { id } = req.params;
   const body = req.body;
-console.log('id updateBlogHandler >>>>', id);
 
   const blog = await blogsRepository.findById(id);
 

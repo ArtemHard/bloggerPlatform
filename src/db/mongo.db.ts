@@ -3,13 +3,16 @@ import { attachDatabasePool } from '@vercel/functions';
 import { SETTINGS } from '../core/settings/settings';
 import { Blog } from '../domain/blog/validation/types/blog';
 import { Post } from '../domain/blog/validation/types/posts';
+import { IUserDB } from '../domain/users/types/user.db.interface';
 
 const BLOG_COLLECTION_NAME = 'blog';
 const POSTS_COLLECTION_NAME = 'posts';
+const USERS_COLLECTION_NAME = 'users';
 
 export let client: MongoClient;
 export let blogsCollection: Collection<Blog>;
 export let postsCollection: Collection<Post>;
+export let usersCollection: Collection<IUserDB>;
 
 const options: MongoClientOptions = {
   appName: 'devrel.vercel.integration',
@@ -24,6 +27,7 @@ export async function runDB(url: string): Promise<void> {
   //Инициализация коллекций
   blogsCollection = db.collection<Blog>(BLOG_COLLECTION_NAME);
   postsCollection = db.collection<Post>(POSTS_COLLECTION_NAME);
+  usersCollection = db.collection<IUserDB>(USERS_COLLECTION_NAME);
 
   attachDatabasePool(client);
 
