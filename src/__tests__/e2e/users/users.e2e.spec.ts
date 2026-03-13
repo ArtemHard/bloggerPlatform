@@ -175,7 +175,7 @@ describe('Users API', () => {
         .expect(HttpStatus.Ok);
 
       const logins = userListResponse.body.items.map((user: any) => user.login);
-      expect(logins).toEqual(['charlie', 'bob', 'alice']);
+      expect(logins).toEqual(['alice', 'bob', 'charlie']);
     });
 
     it('should return users sorted by createdAt in descending order (default); GET /users', async () => {

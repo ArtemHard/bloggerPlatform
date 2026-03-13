@@ -3,8 +3,6 @@ import { Post } from '../blog/validation/types/posts';
 import { ObjectId, WithId } from 'mongodb';
 import { blogsCollection, postsCollection } from '../../db/mongo.db';
 import { PostQueryInput } from '../posts/routers/input/post-query.input';
-import { RepositoryNotFoundError } from '../../core/errors/repository-not-found.error';
-import { log } from 'node:console';
 import { findPaginated } from '../../core/utils/pagination.util';
 
 export const postsRepository = {

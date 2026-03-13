@@ -7,7 +7,6 @@ import { BLOGS_PATH } from '../../../core/paths/paths';
 import { runDB, stopDb } from '../../../db/mongo.db';
 import { SETTINGS } from '../../../core/settings/settings';
 import { clearDb } from '../../../core/utils/clear-db';
-import { log } from 'node:console';
 import { ObjectId } from 'mongodb';
 import { PostSortField } from '../../../domain/posts/routers/input/post-sort-field';
 
@@ -192,8 +191,6 @@ describe('Blogs API', () => {
         .post(BLOGS_PATH)
         .send(newBlogData)
         .expect(HttpStatus.Created);
-
-      log(createResponse.body);
 
       expect(createResponse.body).toEqual({
         id: expect.any(String),
@@ -466,14 +463,12 @@ describe('Blogs API', () => {
         shortDescription: 'Short description here',
         content: 'Full content of the new post',
       };
-      log('blogId >>>>', blogId);
       // Шаг 3: Отправляем POST запрос на создание поста в блоге
       const postResponse = await auth()
         .post(`${BLOGS_PATH}/${blogId}/posts`)
         .send(newPostData)
         .expect(HttpStatus.Created);
 
-      log('postRESPONSE >>>>', postResponse);
 
       // Шаг 4: Проверяем структуру ответа
       expect(postResponse.body).toEqual({
@@ -508,7 +503,6 @@ describe('PUT /blogs/:id', () => {
       .expect(HttpStatus.Created);
 
     const blogId = createResponse.body.id;
-log('blogId >>>>', blogId);
     // Проверим, что блог создан
     const getBeforeUpdate = await auth()
       .get(`${BLOGS_PATH}/${blogId}`)

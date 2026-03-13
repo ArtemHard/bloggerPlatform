@@ -4,7 +4,6 @@ import { blogInputDtoValidation } from '../../validation/blogInputDtoValidation'
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
 import { blogsRepository } from '../../../repositories/blogs.repository';
-import { log } from 'node:console';
 
 export const updateBlogHandler = async (
   req: Request<{ id: string }, {}, BlogInputDto>,
@@ -22,7 +21,6 @@ export const updateBlogHandler = async (
   }
 
   const errors = blogInputDtoValidation(body);
-log('errors >>>>', errors);
   if (errors.length > 0) {
     return res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
   }

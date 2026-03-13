@@ -6,6 +6,7 @@ import { AUTH_PATH } from '../../../core/paths/paths';
 import { runDB, stopDb } from '../../../db/mongo.db';
 import { SETTINGS } from '../../../core/settings/settings';
 import { clearDb } from '../../../core/utils/clear-db';
+import { log } from 'console';
 
 describe('Auth API', () => {
   const app = express();
@@ -39,7 +40,7 @@ describe('Auth API', () => {
   }, 10000);
 
   describe('POST /auth/login', () => {
-    it.skip('should sign in user; status 204', async () => {
+    it('should sign in user; status 204', async () => {
       // First, create a user through the users API
       const createUserResponse = await supertest(app)
         .post('/users')
@@ -66,9 +67,10 @@ describe('Auth API', () => {
         .send(testLoginData)
         .expect(HttpStatus.NoContent);
 
-      expect(loginResponse.body).toEqual({
-        accessToken: expect.any(String)
-      });
+      log('loginResponse >>>>', loginResponse.body);
+
+      expect(Object.keys(loginResponse.body)).toHaveLength(0);
+
     });
 
     it('should return error if passed wrong login; status 401', async () => {
