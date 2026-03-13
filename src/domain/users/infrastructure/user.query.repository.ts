@@ -22,30 +22,34 @@ export const usersQwRepository = {
 
     const loginAndEmailFilter: Record<string, any> = {};
 
+    const orConditions = [];
+
     if (searchLoginTerm) {
-      loginAndEmailFilter.login = {
-        $regex: searchLoginTerm,
-        $options: 'i',
-      };
+      orConditions.push({
+        login: { $regex: searchLoginTerm, $options: 'i' },
+      });
     }
 
     if (searchEmailTerm) {
-      loginAndEmailFilter.email = {
-        $regex: searchEmailTerm,
-        $options: 'i',
-      };
+      orConditions.push({
+        email: { $regex: searchEmailTerm, $options: 'i' },
+      });
+    }
+
+    if (orConditions.length > 0) {
+      loginAndEmailFilter.$or = orConditions;
     }
 
     const totalCount =
       await usersCollection.countDocuments(loginAndEmailFilter);
-      
+
     const users = await usersCollection
       .find(loginAndEmailFilter)
       .sort({ [sortBy]: sortDirection })
       .skip(skip)
       .limit(pageSize)
       .toArray();
-      
+
     return {
       pagesCount: Math.ceil(totalCount / pageSize),
       page: pageNumber,
