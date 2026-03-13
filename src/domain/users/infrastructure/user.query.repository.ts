@@ -18,8 +18,7 @@ export const usersQwRepository = {
   ): Promise<IPagination<IUserView[]>> {
     const { searchEmailTerm, searchLoginTerm } = sortQueryDto;
 
-    const { pageNumber, pageSize, skip, sortBy, sortDirection } =
-      parseQueryParams(sortQueryDto);
+    const { pageNumber, pageSize, skip, sortBy, sortDirection } = sortQueryDto;
 
     const loginAndEmailFilter: Record<string, any> = {};
 
