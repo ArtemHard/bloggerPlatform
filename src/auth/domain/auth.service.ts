@@ -16,7 +16,8 @@ export const authService = {
       password,
     );
 
-    if (!result) {
+    if (result.status !== ResultStatus.Success) {
+      // For NotFound and BadRequest, return a generic unauthorized response
       return {
         status: ResultStatus.Unauthorized,
         data: null,

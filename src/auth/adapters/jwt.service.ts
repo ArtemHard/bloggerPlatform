@@ -17,7 +17,8 @@ export const jwtService = {
   },
   async verifyToken(token: string): Promise<{ userId: string } | null> {
     try {
-      return jwt.verify(token, appConfig.AC_SECRET) as { userId: string };
+      const payload = jwt.verify(token, appConfig.AC_SECRET) as { userId: string };
+      return { userId: payload.userId };
     } catch (error) {
       console.error("Token verify some error");
       return null;

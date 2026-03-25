@@ -4,8 +4,12 @@ import { IdType } from '../../../core/types/id';
 
 export const accessTokenGuard = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.headers.authorization) return res.sendStatus(401);
-  const [authType, token] = req.headers.authorization.split(' ')[1];
 
+  // const [authType, token] = req.headers.authorization.split(' ')[1];
+  const parts = req.headers.authorization.split(' ');
+  if (parts.length !== 2) return res.sendStatus(401);
+  const [authType, token] = parts;
+  
   if (authType !== 'Bearer') return res.sendStatus(401);
 
   const payload = await jwtService.verifyToken(token);

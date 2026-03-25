@@ -22,19 +22,25 @@ authRouter.post(
   async (req: Request<{}, {}, LoginDto>, res: Response) => {
     const { loginOrEmail, password } = req.body;
 
-    const result = await authService.loginUser(loginOrEmail, password);
 
-    if (result.status !== ResultStatus.Success) {
+    try {
+      const result = await authService.loginUser(loginOrEmail, password);
+
+      if (result.status !== ResultStatus.Success) {
+        const statusCode = resultCodeToHttpException(result.status);
+        return res
+          .status(statusCode)
+          .send(result.extensions);
+      }
+
       return res
-        .status(resultCodeToHttpException(result.status))
-        .send(result.extensions);
+        .status(HttpStatus.Ok)
+        .send({ accessToken: result.data!.accessToken });
+    } catch (error) {
+      return res.sendStatus(HttpStatus.InternalServerError);
     }
-
-    return res
-      .status(HttpStatus.Ok)
-      .send({ accessToken: result?.data?.accessToken ?? ' получил null' });
   },
-)
+);
 
 authRouter.get(
   '/me',
@@ -44,7 +50,11 @@ authRouter.get(
 
     if (!userId) return res.sendStatus(HttpStatus.Unauthorized);
     const me = await usersQwRepository.findById(userId);
+    if (me) {
+      const { email, id, login } = me;
+      return res.status(HttpStatus.Ok).send({ email, login, userId: id });
+    }
 
-    return res.status(HttpStatus.Ok).send(me);
+    return res.sendStatus(HttpStatus.NotFound);
   },
 );

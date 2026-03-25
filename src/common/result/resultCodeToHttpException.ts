@@ -1,13 +1,17 @@
+import { HttpStatus } from "../../core/types/http-statuses";
 import { ResultStatus } from "./resultCode";
-import { HttpStatuses } from "../types/httpStatuses";
 
 export const resultCodeToHttpException = (resultCode: ResultStatus): number => {
   switch (resultCode) {
     case ResultStatus.BadRequest:
-      return HttpStatuses.BadRequest;
+      return HttpStatus.BadRequest;
+    case ResultStatus.NotFound:
+      return HttpStatus.Unauthorized;
+    case ResultStatus.Unauthorized:
+      return HttpStatus.Unauthorized;
     case ResultStatus.Forbidden:
-      return HttpStatuses.Forbidden;
+      return HttpStatus.Forbidden;
     default:
-      return HttpStatuses.ServerError;
+      return HttpStatus.InternalServerError;
   }
 };

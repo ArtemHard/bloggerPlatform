@@ -13,13 +13,13 @@ export const createUserHandler = async (
 ) => {
   const attributes = req.body;
   const errors = userInputDtoValidation(attributes);
-
   if (errors.length > 0) {
     return res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
   }
 
   try {
     const createdUser = await usersService.create(attributes);
+
     const createdUserFromDB = await usersQwRepository.findById(
       createdUser._id.toString(),
     );
@@ -36,9 +36,11 @@ export const createUserHandler = async (
 
     return res.status(HttpStatus.Created).send(createdUserFromDB);
   } catch (error: unknown) {
-     if (error instanceof ValidationError) {
-    return res.status(HttpStatus.BadRequest).send({ errorsMessages: error.errorsMessages });
-  }
+    if (error instanceof ValidationError) {
+      return res
+        .status(HttpStatus.BadRequest)
+        .send({ errorsMessages: error.errorsMessages });
+    }
 
     return res.status(HttpStatus.InternalServerError).send();
   }

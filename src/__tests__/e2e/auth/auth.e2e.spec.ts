@@ -14,18 +14,20 @@ describe('Auth API', () => {
 
   const testLoginData = {
     loginOrEmail: 'lg-697232',
-    password: 'qwerty1'
+    password: 'qwerty1',
   };
 
   const wrongLoginData = {
     loginOrEmail: 'wronglogin',
-    password: 'qwerty1'
+    password: 'qwerty1',
   };
 
   const wrongPasswordData = {
     loginOrEmail: 'lg-697232',
-    password: 'wrongpassword'
+    password: 'wrongpassword',
   };
+
+  let accessToken: string;
 
   beforeAll(async () => {
     await runDB(SETTINGS.MONGO_URL);
@@ -40,37 +42,30 @@ describe('Auth API', () => {
   }, 10000);
 
   describe('POST /auth/login', () => {
-    it('should sign in user; status 204', async () => {
-      // First, create a user through the users API
-      const createUserResponse = await supertest(app)
+    it('should sign in user; status 200', async () => {
+      await supertest(app)
         .post('/users')
         .auth('admin', 'qwerty', { type: 'basic' })
         .send({
           login: 'lg-697232',
           email: 'lg-697232@example.com',
-          password: 'qwerty1'
+          password: 'qwerty1',
         })
         .expect(HttpStatus.Created);
-
-      expect(createUserResponse.body).toEqual({
-        id: expect.any(String),
-        login: 'lg-697232',
-        email: 'lg-697232@example.com',
-        createdAt: expect.stringMatching(
-          /^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/
-        ),
-      });
 
       // Now test login
       const loginResponse = await supertest(app)
         .post(`${AUTH_PATH}/login`)
         .send(testLoginData)
-        .expect(HttpStatus.NoContent);
+        .expect(HttpStatus.Ok);
 
       log('loginResponse >>>>', loginResponse.body);
 
-      expect(Object.keys(loginResponse.body)).toHaveLength(0);
+      expect(loginResponse.body).toHaveProperty('accessToken');
+      expect(typeof loginResponse.body.accessToken).toBe('string');
+      expect(loginResponse.body.accessToken).not.toHaveLength(0);
 
+      accessToken = loginResponse.body.accessToken;
     });
 
     it('should return error if passed wrong login; status 401', async () => {
@@ -81,7 +76,7 @@ describe('Auth API', () => {
         .send({
           login: 'lg-697232',
           email: 'lg-697232@example.com',
-          password: 'qwerty1'
+          password: 'qwerty1',
         })
         .expect(HttpStatus.Created);
 
@@ -100,7 +95,7 @@ describe('Auth API', () => {
         .send({
           login: 'lg-697232',
           email: 'lg-697232@example.com',
-          password: 'qwerty1'
+          password: 'qwerty1',
         })
         .expect(HttpStatus.Created);
 
@@ -117,7 +112,7 @@ describe('Auth API', () => {
         .post(`${AUTH_PATH}/login`)
         .send({
           loginOrEmail: 'nonexistent',
-          password: 'password123'
+          password: 'password123',
         })
         .expect(HttpStatus.Unauthorized);
     });
@@ -127,7 +122,7 @@ describe('Auth API', () => {
       await supertest(app)
         .post(`${AUTH_PATH}/login`)
         .send({
-          password: 'qwerty1'
+          password: 'qwerty1',
         })
         .expect(HttpStatus.BadRequest);
 
@@ -135,7 +130,7 @@ describe('Auth API', () => {
       await supertest(app)
         .post(`${AUTH_PATH}/login`)
         .send({
-          loginOrEmail: 'lg-697232'
+          loginOrEmail: 'lg-697232',
         })
         .expect(HttpStatus.BadRequest);
 
@@ -144,9 +139,62 @@ describe('Auth API', () => {
         .post(`${AUTH_PATH}/login`)
         .send({
           loginOrEmail: '',
-          password: ''
+          password: '',
         })
         .expect(HttpStatus.BadRequest);
+    });
+  });
+
+  describe('GET /auth/me', () => {
+    it('should return 401 without Authorization header', async () => {
+      await supertest(app)
+        .get(`${AUTH_PATH}/me`)
+        .expect(HttpStatus.Unauthorized);
+    });
+
+    it('should return 401 with wrong Authorization header format', async () => {
+      await supertest(app)
+        .get(`${AUTH_PATH}/me`)
+        .set('Authorization', 'Basic wrongToken')
+        .expect(HttpStatus.Unauthorized);
+    });
+
+    it('should return 401 with invalid token', async () => {
+      await supertest(app)
+        .get(`${AUTH_PATH}/me`)
+        .set('Authorization', 'Bearer invalid.token.here')
+        .expect(HttpStatus.Unauthorized);
+    });
+
+    it('should return user info with valid token; status 200', async () => {
+      // First, get a valid token
+      const createUserResponse = await supertest(app)
+        .post('/users')
+        .auth('admin', 'qwerty', { type: 'basic' })
+        .send({
+          login: 'lg-697232',
+          email: 'lg-697232@example.com',
+          password: 'qwerty1',
+        })
+        .expect(HttpStatus.Created);
+
+      const loginResponse = await supertest(app)
+        .post(`${AUTH_PATH}/login`)
+        .send(testLoginData)
+        .expect(HttpStatus.Ok);
+
+      const token = loginResponse.body.accessToken;
+
+      const meResponse = await supertest(app)
+        .get(`${AUTH_PATH}/me`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(HttpStatus.Ok);
+
+      expect(meResponse.body).toEqual({
+        userId: expect.any(String),
+        login: 'lg-697232',
+        email: 'lg-697232@example.com',
+      });
     });
   });
 });
