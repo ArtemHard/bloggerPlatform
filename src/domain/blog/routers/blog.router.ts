@@ -13,6 +13,7 @@ import { PostSortField } from '../../posts/routers/input/post-sort-field';
 import { getBlogPostsListHandler } from './handlers/get-blog-posts-list.handler';
 import { createBlogPostHandler } from './handlers/create-blog-post-handler';
 import { BlogSortField } from './input/blog-sort-field';
+import { baseAuthGuard } from '../../../auth/api/guards/base.auth.guard';
 
 export const blogRouter = Router({});
 
@@ -26,7 +27,7 @@ blogRouter
     getAllBlogsHandler,
   )
   .get('/:id', idValidation, inputValidationResultMiddleware, getBlogHandler)
-  .post('', superAdminGuardMiddleware, createBlogHandler)
+  .post('', baseAuthGuard, createBlogHandler)
   .put(
     '/:id',
     idValidation,

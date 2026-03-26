@@ -1,10 +1,11 @@
 import express, { Express } from "express";
-import { BLOGS_PATH, POSTS_PATH, TESTING_PATH, USERS_PATH, AUTH_PATH } from "./core/paths/paths";
+import { BLOGS_PATH, POSTS_PATH, TESTING_PATH, USERS_PATH, AUTH_PATH, COMMENTS_PATH } from "./core/paths/paths";
 import { blogRouter } from "./domain/blog/routers/blog.router";
 import { postsRouter } from "./domain/posts/routers/posts.router";
 import { testingRouter } from "./testing/routers/testing.routers";
 import { userRouter } from "./domain/users/routers/users.router";
 import { authRouter } from "./auth/api/auth.router";
+import { commentsRouter } from "./domain/comments/routers/comments.router";
 
 export const setupApp = (app: Express) => {
   app.use(express.json()); // middleware для парсинга JSON в теле запроса
@@ -19,5 +20,6 @@ export const setupApp = (app: Express) => {
   app.use(USERS_PATH, userRouter);
   app.use(AUTH_PATH, authRouter);
   app.use(TESTING_PATH, testingRouter);
+  app.use(COMMENTS_PATH, commentsRouter);
   return app;
 };
