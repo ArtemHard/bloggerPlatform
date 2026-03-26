@@ -37,6 +37,8 @@ authRouter.post(
         .status(HttpStatus.Ok)
         .send({ accessToken: result.data!.accessToken });
     } catch (error) {
+      console.error('Login error:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'Not an Error object');
       return res.sendStatus(HttpStatus.InternalServerError);
     }
   },
