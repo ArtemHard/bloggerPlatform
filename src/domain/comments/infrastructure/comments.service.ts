@@ -25,6 +25,8 @@ export const commentsService = {
         };
       }
 
+      await commentsRepository.delete(commentId);
+
       return {
         status: ResultStatus.Success,
         data: null,

@@ -46,15 +46,12 @@ export const commentsRepository = {
 //   },
 
   async findById(id: string): Promise<WithId<CommentType> | null> {
-    return commentsCollection.findOne({ _id: new ObjectId(id) });
+    return await commentsCollection.findOne({ _id: new ObjectId(id) });
   },
 
-  async findByIdOrFail(id: string): Promise<WithId<CommentType>> {
+  async findByIdOrFail(id: string): Promise<WithId<CommentType> | null> {
     const res = await commentsCollection.findOne({ _id: new ObjectId(id) });
 
-    if (!res) {
-      throw new Error('Comment not found');
-    }
     return res;
   },
 
