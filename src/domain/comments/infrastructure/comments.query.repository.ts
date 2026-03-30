@@ -30,14 +30,17 @@ export const commentsQwRepository = {
       };
     }
 
-    const totalCount = await commentsCollection.countDocuments();
+    const filter = { postId };
 
-    const comments = await commentsCollection
-      .find({ postId })
-      .sort({ [sortBy]: sortDirection })
-      .skip(skip)
-      .limit(pageSize)
-      .toArray();
+    const [comments, totalCount] = await Promise.all([
+      commentsCollection
+        .find(filter)
+        .sort({ [sortBy]: sortDirection })
+        .skip(skip)
+        .limit(pageSize)
+        .toArray(),
+      commentsCollection.countDocuments(filter)
+    ]);
 
     return {
       status: ResultStatus.Success,
