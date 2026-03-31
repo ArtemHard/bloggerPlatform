@@ -87,7 +87,7 @@ export const commentsService = {
     userId: string;
     content: string;
   }): Promise<PromiseResult<WithId<CommentType> | null>> {
-    const post = await postsRepository.findByIdOrFail(postId);
+    const post = await postsRepository.findById(postId);
 
     const resultUser = await usersQwRepository.findById(userId);
 
