@@ -10,6 +10,6 @@ export const appConfig = {
   AC_TIME: process.env.AC_TIME as unknown as string,
 //   RT_SECRET: process.env.RT_SECRET,
 //   DB_TYPE: process.env.DB_TYPE,
-//   EMAIL: process.env.EMAIL as string,
-//   EMAIL_PASS: process.env.EMAIL_PASS as string,
+  EMAIL: process.env.EMAIL as string,
+  EMAIL_PASS: process.env.EMAIL_PASS as string,
 };
