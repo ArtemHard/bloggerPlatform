@@ -89,7 +89,12 @@ export const authService = {
         status: ResultStatus.BadRequest,
         errorMessage: 'Bad Request',
         data: null,
-        extensions: [{ field: 'loginOrEmail', message: 'Already Registered' }],
+        extensions: [
+          {
+            field: user.email === email ? 'email' : 'login',
+            message: 'Already Registered',
+          },
+        ],
       };
 
     const passwordHash = await bcryptService.generateHash(password);
@@ -140,7 +145,7 @@ export const authService = {
       };
     }
 
-     if (user.emailConfirmation.isConfirmed) {
+    if (user.emailConfirmation.isConfirmed) {
       return {
         status: ResultStatus.BadRequest,
         errorMessage: 'Bad Request',

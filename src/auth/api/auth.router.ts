@@ -85,7 +85,6 @@ authRouter
       const result = await authService.registerUser({ email, login, password });
       if (result.status !== ResultStatus.Success) {
         const statusCode = resultCodeToHttpException(result.status);
-        console.log('result.extensions ---->', result.extensions);
 
         return res
           .status(statusCode)

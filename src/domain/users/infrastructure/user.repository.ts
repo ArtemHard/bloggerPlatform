@@ -25,11 +25,11 @@ export const usersRepository = {
   async doesExistByLoginOrEmail(
     login: string,
     email: string,
-  ): Promise<boolean> {
+  ): Promise<WithId<IUserDB> | null> {
     const user = await usersCollection.findOne({
       $or: [{ email }, { login }],
     });
-    return !!user;
+    return user;
   },
   async getUserByConfirmEmailCode(
     code: string,

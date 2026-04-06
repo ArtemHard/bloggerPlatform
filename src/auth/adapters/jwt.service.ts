@@ -8,7 +8,6 @@ export const jwtService = {
     });
 
     const payload = jwt.decode(token);
-    console.log('Generated token payload:', payload);
 
     return token;
   },
