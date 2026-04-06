@@ -140,6 +140,15 @@ export const authService = {
       };
     }
 
+     if (user.emailConfirmation.isConfirmed) {
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'Bad Request',
+        data: null,
+        extensions: [{ field: 'code', message: 'code already been applied' }],
+      };
+    }
+
     const expirationDate = new Date(user.emailConfirmation.expirationDate);
 
     if (expirationDate < new Date())
@@ -164,10 +173,18 @@ export const authService = {
 
     if (!user)
       return {
-        status: ResultStatus.NotFound,
+        status: ResultStatus.BadRequest,
         data: null,
         errorMessage: 'Not Found',
-        extensions: [{ field: 'loginOrEmail', message: 'Not Found' }],
+        extensions: [{ field: 'email', message: 'Not Found' }],
+      };
+
+    if (user.emailConfirmation.isConfirmed)
+      return {
+        status: ResultStatus.BadRequest,
+        data: null,
+        errorMessage: 'Email already confirmed',
+        extensions: [{ field: 'email', message: 'Email is already confirmed' }],
       };
 
     const newConfirmationCode = randomUUID();

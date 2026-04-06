@@ -18,6 +18,7 @@ import { emailInputDtoValidation } from '../validation/userInputDtoValidation';
 import { CreateUserDto } from '../../domain/users/types/create-user.dto';
 import { createUserSchema } from '../validation/shemas/create-user-shema';
 import { createUserInputDtoValidation } from '../validation/createUserInputDtoValidation';
+import { ValidationError } from '../../core/types/validationError';
 
 export const authRouter = Router();
 
@@ -69,7 +70,7 @@ authRouter
   )
   // Registration in the system. Email with confirmation code will be send to passed email address
   .post(
-    'registration',
+    '/registration',
     async (req: Request<{}, {}, CreateUserDto>, res: Response) => {
       const { email, login, password } = req.body;
 
@@ -84,7 +85,11 @@ authRouter
       const result = await authService.registerUser({ email, login, password });
       if (result.status !== ResultStatus.Success) {
         const statusCode = resultCodeToHttpException(result.status);
-        return res.status(statusCode).send(result.extensions);
+        console.log('result.extensions ---->', result.extensions);
+
+        return res
+          .status(statusCode)
+          .send(createErrorMessages(result.extensions as ValidationError[]));
       }
       return res.sendStatus(HttpStatus.NoContent);
     },
@@ -111,7 +116,7 @@ authRouter
   )
   //Confirm registration
   .post(
-    'registration-confirmation',
+    '/registration-confirmation',
     async (req: Request<{}, {}, { code: string }>, res: Response) => {
       const { code } = req.body;
 
@@ -120,14 +125,14 @@ authRouter
       // const result = await authService.registerUser({email, login, password});
       if (result.status !== ResultStatus.Success) {
         const statusCode = resultCodeToHttpException(result.status);
-        return res.status(statusCode).send(result.extensions);
+        return res.status(statusCode).send(createErrorMessages(result.extensions as ValidationError[]));
       }
       return res.sendStatus(HttpStatus.NoContent);
     },
   )
   //Registration in the system email resending
   .post(
-    'registration-email-resending',
+    '/registration-email-resending',
     async (req: Request<{}, {}, { email: string }>, res: Response) => {
       const { email } = req.body;
 
@@ -143,7 +148,7 @@ authRouter
 
       if (result.status !== ResultStatus.Success) {
         const statusCode = resultCodeToHttpException(result.status);
-        return res.status(statusCode).send(result.extensions);
+        return res.status(statusCode).send(createErrorMessages(result.extensions as ValidationError[]));
       }
       return res.sendStatus(HttpStatus.NoContent);
     },
