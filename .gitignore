@@ -4,8 +4,5 @@ dist/
 .env.test
 
 # users prompt for LLM
-prompt.md
+
 src/__prompts__/
-api.md
-console.md
-rules.md

@@ -2,9 +2,18 @@ import jwt from 'jsonwebtoken';
 import { appConfig } from '../../common/config/config';
 
 export const jwtService = {
-  async createToken(userId: string): Promise<string> {
+  async createAccessToken(userId: string): Promise<string> {
     const token = jwt.sign({ userId }, appConfig.AC_SECRET, {
-      expiresIn: process.env.AC_TIME ? parseInt(process.env.AC_TIME, 10) : 3600,
+      expiresIn: process.env.AC_TIME ? parseInt(process.env.AC_TIME, 10) : 10,
+    });
+
+    const payload = jwt.decode(token);
+
+    return token;
+  },
+  async createRefreshToken(userId: string): Promise<string> {
+    const token = jwt.sign({ userId }, appConfig.RT_SECRET, {
+      expiresIn: process.env.RT_TIME ? parseInt(process.env.RT_TIME, 10) : 20,
     });
 
     const payload = jwt.decode(token);
@@ -19,7 +28,7 @@ export const jwtService = {
       return null;
     }
   },
-  async verifyToken(token: string): Promise<{ userId: string } | null> {
+  async verifyAccessToken(token: string): Promise<{ userId: string } | null> {
     try {
       const payload = jwt.verify(token, appConfig.AC_SECRET) as {
         userId: string;
@@ -27,6 +36,29 @@ export const jwtService = {
 
       return { userId: payload.userId };
     } catch (error) {
+      return null;
+    }
+  },
+  async verifyRefreshToken(token: string): Promise<{ userId: string } | null> {
+    try {
+      const payload = jwt.verify(token, appConfig.RT_SECRET) as {
+        userId: string;
+      };
+
+      return { userId: payload.userId };
+    } catch (error) {
+      return null;
+    }
+  },
+  async decodeRefreshToken(token: string): Promise<{ userId: string } | null> {
+    try {
+      const payload = jwt.decode(token) as { userId: string };
+      if (!payload || !payload.userId) {
+        return null;
+      }
+      return { userId: payload.userId };
+    } catch (e: unknown) {
+      console.error("Can't decode refresh token", e);
       return null;
     }
   },

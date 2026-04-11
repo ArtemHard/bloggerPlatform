@@ -5,17 +5,20 @@ import { Blog } from '../domain/blog/validation/types/blog';
 import { Post } from '../domain/blog/validation/types/posts';
 import { IUserDB } from '../domain/users/types/user.db.interface';
 import { ICommentDB } from '../domain/comments/types/comment.db.interface';
+import { IRefreshTokenDB } from '../auth/infrastructure/token.repository';
 
 const BLOG_COLLECTION_NAME = 'blog';
 const POSTS_COLLECTION_NAME = 'posts';
 const USERS_COLLECTION_NAME = 'users';
 const COMMENTS_COLLECTION_NAME = 'comments';
+const TOKENS_COLLECTION_NAME = 'tokens';
 
 export let client: MongoClient;
 export let blogsCollection: Collection<Blog>;
 export let postsCollection: Collection<Post>;
 export let usersCollection: Collection<IUserDB>;
 export let commentsCollection: Collection<ICommentDB>;
+export let tokensCollection: Collection<IRefreshTokenDB>;
 
 const options: MongoClientOptions = {
   appName: 'devrel.vercel.integration',
@@ -32,6 +35,7 @@ export async function runDB(url: string): Promise<void> {
   postsCollection = db.collection<Post>(POSTS_COLLECTION_NAME);
   usersCollection = db.collection<IUserDB>(USERS_COLLECTION_NAME);
   commentsCollection = db.collection<ICommentDB>(COMMENTS_COLLECTION_NAME);
+  tokensCollection = db.collection<IRefreshTokenDB>(TOKENS_COLLECTION_NAME);
 
   attachDatabasePool(client);
 

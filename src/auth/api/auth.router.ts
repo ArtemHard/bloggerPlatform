@@ -11,6 +11,7 @@ import { HttpStatus } from '../../core/types/http-statuses';
 import { ResultStatus } from '../../common/result/resultCode';
 import { resultCodeToHttpException } from '../../common/result/resultCodeToHttpException';
 import { accessTokenGuard } from './guards/access.token.guard';
+import { refreshTokenGuard } from './guards/refresh.token.guard';
 import { RequestWithUserId } from '../../core/types/requests';
 import { IdType } from '../../core/types/id';
 import { usersQwRepository } from '../../domain/users/infrastructure/user.query.repository';
@@ -34,10 +35,16 @@ authRouter
       try {
         const result = await authService.loginUser(loginOrEmail, password);
 
-        if (result.status !== ResultStatus.Success) {
+        if (result.status !== ResultStatus.Success || result.data === null) {
           const statusCode = resultCodeToHttpException(result.status);
           return res.status(statusCode).send(result.extensions);
         }
+
+        res.cookie('refreshToken', result.data.refreshToken, {
+          httpOnly: true,
+          secure: true,
+          maxAge: 20 * 1000,
+        });
 
         return res
           .status(HttpStatus.Ok)
@@ -50,6 +57,50 @@ authRouter
         );
         return res.sendStatus(HttpStatus.InternalServerError);
       }
+    },
+  )
+  .post(
+    '/refresh-token',
+    refreshTokenGuard,
+    async (req: RequestWithUserId<IdType>, res: Response) => {
+      const userId = req.user?.id as string;
+      const oldRefreshToken = (req as any).refreshToken;
+
+      if (!userId || !oldRefreshToken) return res.sendStatus(HttpStatus.Unauthorized);
+
+      const result = await authService.refreshTokens(userId, oldRefreshToken);
+
+      if (result.status !== ResultStatus.Success) {
+        return res.sendStatus(HttpStatus.Unauthorized);
+      }
+
+      res.cookie('refreshToken', result.data!.refreshToken, {
+        httpOnly: true,
+        secure: true,
+        maxAge: 20 * 1000,
+      });
+
+      return res
+        .status(HttpStatus.Ok)
+        .send({ accessToken: result.data!.accessToken });
+    },
+  )
+  .post(
+    '/logout',
+    refreshTokenGuard,
+    async (req: RequestWithUserId<IdType>, res: Response) => {
+      const refreshToken = (req as any).refreshToken;
+
+      if (!refreshToken) return res.sendStatus(HttpStatus.Unauthorized);
+
+      const result = await authService.logout(refreshToken);
+
+      if (result.status !== ResultStatus.Success) {
+        return res.sendStatus(HttpStatus.Unauthorized);
+      }
+
+      res.clearCookie('refreshToken');
+      return res.sendStatus(HttpStatus.NoContent);
     },
   )
   .get(
