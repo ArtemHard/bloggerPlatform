@@ -5,8 +5,10 @@ import {
   createErrorMessages,
   inputValidationResultMiddleware,
 } from '../../core/middlewars/input-validtion-result.middleware';
+import { rateLimitMiddleware } from '../../core/middlewars/rate-limit.middleware';
 import { EmailDto, LoginDto } from '../types/login.dto';
 import { authService } from '../domain/auth.service';
+import { jwtService } from '../adapters/jwt.service';
 import { HttpStatus } from '../../core/types/http-statuses';
 import { ResultStatus } from '../../common/result/resultCode';
 import { resultCodeToHttpException } from '../../common/result/resultCodeToHttpException';
@@ -26,14 +28,17 @@ export const authRouter = Router();
 authRouter
   .post(
     '/login',
+    rateLimitMiddleware,
     passwordValidation,
     loginOrEmailValidation,
     inputValidationResultMiddleware,
     async (req: Request<{}, {}, LoginDto>, res: Response) => {
       const { loginOrEmail, password } = req.body;
+      const ip = req.ip || req.connection.remoteAddress || 'unknown';
+      const userAgent = req.headers['user-agent'] || 'Unknown Device';
 
       try {
-        const result = await authService.loginUser(loginOrEmail, password);
+        const result = await authService.loginUser(loginOrEmail, password, ip, userAgent);
 
         if (result.status !== ResultStatus.Success || result.data === null) {
           const statusCode = resultCodeToHttpException(result.status);
@@ -68,13 +73,15 @@ authRouter
 
       if (!userId || !oldRefreshToken) return res.sendStatus(HttpStatus.Unauthorized);
 
-      const result = await authService.refreshTokens(userId, oldRefreshToken);
+      const tokenData = await jwtService.verifyRefreshToken(oldRefreshToken);
+      if (!tokenData) return res.sendStatus(HttpStatus.Unauthorized);
+
+      const result = await authService.refreshTokens(userId, oldRefreshToken, tokenData.deviceId);
 
       if (result.status !== ResultStatus.Success) {
         return res.sendStatus(HttpStatus.Unauthorized);
       }
-
-      res.cookie('refreshToken', result.data!.refreshToken, {
+      res.cookie('refreshToken', result.data?.refreshToken, {
         httpOnly: true,
         secure: true,
         maxAge: 20 * 1000,
@@ -93,7 +100,10 @@ authRouter
 
       if (!refreshToken) return res.sendStatus(HttpStatus.Unauthorized);
 
-      const result = await authService.logout(refreshToken);
+      const tokenData = await jwtService.verifyRefreshToken(refreshToken);
+      if (!tokenData) return res.sendStatus(HttpStatus.Unauthorized);
+
+      const result = await authService.logout(refreshToken, tokenData.deviceId);
 
       if (result.status !== ResultStatus.Success) {
         return res.sendStatus(HttpStatus.Unauthorized);
@@ -122,6 +132,7 @@ authRouter
   // Registration in the system. Email with confirmation code will be send to passed email address
   .post(
     '/registration',
+    rateLimitMiddleware,
     async (req: Request<{}, {}, CreateUserDto>, res: Response) => {
       const { email, login, password } = req.body;
 
@@ -167,6 +178,7 @@ authRouter
   //Confirm registration
   .post(
     '/registration-confirmation',
+    rateLimitMiddleware,
     async (req: Request<{}, {}, { code: string }>, res: Response) => {
       const { code } = req.body;
 
@@ -183,6 +195,7 @@ authRouter
   //Registration in the system email resending
   .post(
     '/registration-email-resending',
+    rateLimitMiddleware,
     async (req: Request<{}, {}, { email: string }>, res: Response) => {
       const { email } = req.body;
 

@@ -16,12 +16,15 @@ import { emailExamples } from '../adapters/emailExamples';
 import e from 'express';
 import { randomUUID } from 'node:crypto';
 import { tokensRepository } from '../infrastructure/token.repository';
+import { requestLogsRepository } from '../../domain/repositories/request-logs.repository';
 
 export const authService = {
   async loginUser(
     loginOrEmail: string,
     password: string,
-  ): Promise<PromiseResult<{ accessToken: string; refreshToken: string } | null>> {
+    ip: string,
+    userAgent: string,
+  ): Promise<PromiseResult<{ accessToken: string; refreshToken: string; deviceId: string } | null>> {
     const result = await this.checkUserCredentials(loginOrEmail, password);
 
     if (result.status !== ResultStatus.Success) {
@@ -34,24 +37,37 @@ export const authService = {
     }
 
     const userId = result.data!._id.toString();
+    const deviceId = randomUUID();
     const accessToken = await jwtService.createAccessToken(userId);
-    const refreshToken = await jwtService.createRefreshToken(userId);
+    const refreshToken = await jwtService.createRefreshToken(userId, deviceId);
 
     // Store refresh token in database
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + (process.env.RT_TIME ? parseInt(process.env.RT_TIME, 10) : 20));
-    
+
     await tokensRepository.create({
       userId,
       token: refreshToken,
       createdAt: new Date(),
       expiresAt,
-      isRevoked: false
+      isRevoked: false,
+      deviceId
+    });
+
+    // Create device record
+    await requestLogsRepository.createDevice({
+      IP: ip,
+      URL: '',
+      date: new Date(),
+      userId,
+      deviceId,
+      title: userAgent || 'Unknown Device',
+      exp: expiresAt
     });
 
     return {
       status: ResultStatus.Success,
-      data: { accessToken, refreshToken },
+      data: { accessToken, refreshToken, deviceId },
       extensions: [],
     };
   },
@@ -59,27 +75,32 @@ export const authService = {
   async refreshTokens(
     userId: string,
     oldRefreshToken: string,
+    deviceId: string,
   ): Promise<PromiseResult<{ accessToken: string; refreshToken: string } | null>> {
     // Revoke the old refresh token
     await tokensRepository.revokeToken(oldRefreshToken);
-    
+
     // Clean up expired tokens
     await tokensRepository.revokeExpiredTokens();
 
     const accessToken = await jwtService.createAccessToken(userId);
-    const refreshToken = await jwtService.createRefreshToken(userId);
+    const refreshToken = await jwtService.createRefreshToken(userId, deviceId);
 
     // Store new refresh token in database
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + (process.env.RT_TIME ? parseInt(process.env.RT_TIME, 10) : 20));
-    
+
     await tokensRepository.create({
       userId,
       token: refreshToken,
       createdAt: new Date(),
       expiresAt,
-      isRevoked: false
+      isRevoked: false,
+      deviceId
     });
+
+    // Update device lastActiveDate and exp
+    await requestLogsRepository.updateLastActiveDate(deviceId, new Date(), expiresAt);
 
     return {
       status: ResultStatus.Success,
@@ -217,9 +238,9 @@ export const authService = {
     };
   },
 
-  async logout(refreshToken: string): Promise<PromiseResult<null>> {
+  async logout(refreshToken: string, deviceId: string): Promise<PromiseResult<null>> {
     const tokenExists = await tokensRepository.findByToken(refreshToken);
-    
+
     if (!tokenExists) {
       return {
         status: ResultStatus.Unauthorized,
@@ -231,6 +252,9 @@ export const authService = {
 
     // Revoke the specific refresh token
     await tokensRepository.revokeToken(refreshToken);
+
+    // Delete device record
+    await requestLogsRepository.deleteByDeviceId(deviceId);
 
     return {
       status: ResultStatus.Success,

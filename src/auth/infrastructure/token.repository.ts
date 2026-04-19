@@ -8,6 +8,7 @@ export interface IRefreshTokenDB {
   createdAt: Date;
   expiresAt: Date;
   isRevoked: boolean;
+  deviceId?: string;
 }
 
 export const tokensRepository = {
@@ -56,5 +57,13 @@ export const tokensRepository = {
       isRevoked: true
     });
     return result.deletedCount > 0;
+  },
+
+  async revokeTokensByUserIdAndDeviceId(userId: string, deviceId: string): Promise<boolean> {
+    const result = await tokensCollection.updateMany(
+      { userId, deviceId },
+      { $set: { isRevoked: true } }
+    );
+    return result.matchedCount > 0;
   }
 };

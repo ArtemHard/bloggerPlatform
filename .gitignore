@@ -5,4 +5,4 @@ dist/
 
 # users prompt for LLM
 
-src/__prompts__/
+# src/__prompts__/
