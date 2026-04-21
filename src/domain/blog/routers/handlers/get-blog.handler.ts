@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import { blogsRepository } from '../../../repositories/blogs.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { IBlogsRepository } from '../../../repositories/types/blogs.repository.interface';
+
+const blogsRepository = container.get<IBlogsRepository>(TYPES.BlogsRepository);
 import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
 
 export const getBlogHandler = async (

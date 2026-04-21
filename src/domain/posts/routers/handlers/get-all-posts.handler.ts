@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import { postsRepository } from '../../../repositories/posts.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { IPostsRepository } from '../../../repositories/types/posts.repository.interface';
+
+const postsRepository = container.get<IPostsRepository>(TYPES.PostsRepository);
 import { PostQueryInput } from '../input/post-query.input';
 import { parseQueryParams } from '../../../../core/utils/query-parser.util';
 import { mapToPostListPaginatedOutput } from '../../../blog/routers/mappers/map-to-post-list-paginated-output';

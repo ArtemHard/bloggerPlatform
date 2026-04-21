@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
-import { blogsRepository } from '../../../repositories/blogs.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { IBlogsRepository } from '../../../repositories/types/blogs.repository.interface';
+
+const blogsRepository = container.get<IBlogsRepository>(TYPES.BlogsRepository);
 
 export const deleteBlogHandler = async (
   req: Request<{ id: string }>,

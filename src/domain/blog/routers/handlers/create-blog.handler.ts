@@ -3,7 +3,11 @@ import { BlogInputDto } from '../../dto/blog.input-dto';
 import { blogInputDtoValidation } from '../../validation/blogInputDtoValidation';
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
-import { blogsRepository } from '../../../repositories/blogs.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { IBlogsRepository } from '../../../repositories/types/blogs.repository.interface';
+
+const blogsRepository = container.get<IBlogsRepository>(TYPES.BlogsRepository);
 import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
 
 export const createBlogHandler = async (

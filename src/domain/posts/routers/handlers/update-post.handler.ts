@@ -3,7 +3,11 @@ import { PostInputDto } from '../../dto/post.input-dto';
 import { postInputDtoValidation } from '../../validation/postInputDtoValidation';
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
-import { postsRepository } from '../../../repositories/posts.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { IPostsRepository } from '../../../repositories/types/posts.repository.interface';
+
+const postsRepository = container.get<IPostsRepository>(TYPES.PostsRepository);
 
 export const updatePostHandler = async (
   req: Request<{ id: string }, {}, PostInputDto>,

@@ -1,11 +1,14 @@
+import { injectable } from 'inversify';
 import { ObjectId } from 'mongodb';
 import { requestLogsCollection } from '../../db/mongo.db';
 import { IRequestLog } from './types/request-log.interface';
+import { IRequestLogsRepository } from './types/request-logs.repository.interface';
 
-export const requestLogsRepository = {
+@injectable()
+export class RequestLogsRepository implements IRequestLogsRepository {
   async addLog(log: IRequestLog): Promise<void> {
     await requestLogsCollection.insertOne(log);
-  },
+  }
 
   async countRequestsByFilter(
     IP: string,
@@ -18,27 +21,27 @@ export const requestLogsRepository = {
       URL,
       date: { $gte: dateFrom }
     });
-  },
+  }
 
   async createDevice(deviceData: Omit<IRequestLog, '_id'>): Promise<ObjectId> {
     const result = await requestLogsCollection.insertOne(deviceData);
     return result.insertedId;
-  },
+  }
 
   async findByDeviceId(deviceId: string): Promise<IRequestLog | null> {
     return requestLogsCollection.findOne({ deviceId });
-  },
+  }
 
   async findByUserId(userId: string): Promise<IRequestLog[]> {
     return requestLogsCollection
       .find({ userId, exp: { $gt: new Date() } })
       .toArray();
-  },
+  }
 
   async deleteByDeviceId(deviceId: string): Promise<boolean> {
     const result = await requestLogsCollection.deleteOne({ deviceId });
     return result.deletedCount === 1;
-  },
+  }
 
   async deleteAllExcept(userId: string, currentDeviceId: string): Promise<boolean> {
     const result = await requestLogsCollection.deleteMany({
@@ -46,7 +49,7 @@ export const requestLogsRepository = {
       deviceId: { $ne: currentDeviceId }
     });
     return result.deletedCount > 0;
-  },
+  }
 
   async updateLastActiveDate(deviceId: string, lastActiveDate: Date, exp: Date): Promise<boolean> {
     const result = await requestLogsCollection.updateOne(
@@ -54,7 +57,7 @@ export const requestLogsRepository = {
       { $set: { date: lastActiveDate, exp } }
     );
     return result.matchedCount === 1;
-  },
+  }
 
   async deleteExpired(): Promise<boolean> {
     const result = await requestLogsCollection.deleteMany({
@@ -62,4 +65,4 @@ export const requestLogsRepository = {
     });
     return result.deletedCount > 0;
   }
-};
+}

@@ -1,17 +1,20 @@
+import { injectable } from 'inversify';
 import { PostInputDto } from '../posts/dto/post.input-dto';
 import { Post } from '../blog/validation/types/posts';
 import { ObjectId, WithId } from 'mongodb';
 import { blogsCollection, postsCollection } from '../../db/mongo.db';
 import { PostQueryInput } from '../posts/routers/input/post-query.input';
 import { findPaginated } from '../../core/utils/pagination.util';
+import { IPostsRepository } from './types/posts.repository.interface';
 
-export const postsRepository = {
+@injectable()
+export class PostsRepository implements IPostsRepository {
   // Найти все posts
   async findAllPosts(
     queryDto: PostQueryInput,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
     return findPaginated<Post>(postsCollection, {}, queryDto);
-  },
+  }
 
   async findMany(
     queryDto: PostQueryInput,
@@ -30,18 +33,18 @@ export const postsRepository = {
       postsCollection.countDocuments(filter),
     ]);
     return { items, totalCount };
-  },
+  }
 
   async findPostsByBlog(
     queryDto: PostQueryInput,
     blogId: string,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
     return findPaginated<Post>(postsCollection, { blogId }, queryDto);
-  },
+  }
 
   async findById(id: string): Promise<WithId<Post> | null> {
     return postsCollection.findOne({ _id: new ObjectId(id) });
-  },
+  }
 
   async findByIdOrFail(id: string): Promise<WithId<Post>> {
     const res = await postsCollection.findOne({ _id: new ObjectId(id) });
@@ -51,7 +54,7 @@ export const postsRepository = {
       // throw new RepositoryNotFoundError('Post not exist');
     }
     return res;
-  },
+  }
 
   // Создать новый post
   async create(dto: PostInputDto): Promise<WithId<Post>> {
@@ -68,7 +71,7 @@ export const postsRepository = {
 
     const insertResult = await postsCollection.insertOne(newPost);
     return { ...newPost, _id: insertResult.insertedId };
-  },
+  }
 
   // Обновить post по ID
   async update(
@@ -96,7 +99,7 @@ export const postsRepository = {
       throw new Error('Post not found');
     }
     return;
-  },
+  }
 
   // Удалить post по ID
   async delete(id: string): Promise<void> {
@@ -109,5 +112,5 @@ export const postsRepository = {
     }
 
     return;
-  },
-};
+  }
+}

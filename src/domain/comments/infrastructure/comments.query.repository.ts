@@ -1,16 +1,25 @@
 import { ObjectId, WithId } from 'mongodb';
+import { inject, injectable } from 'inversify';
 import { QueryParams } from '../../../core/utils/query-parser.util';
 import { IPagination } from '../../../core/types/pagination';
-import { commentsCollection, usersCollection } from '../../../db/mongo.db';
-import { commentsRepository } from '../../repositories/comments.repository';
+import { TYPES } from '../../../ioc/ioc.types';
+import { ICommentsRepository } from '../../repositories/types/comments.repository.interface';
+import { IPostsRepository } from '../../repositories/types/posts.repository.interface';
+import { ICommentsQueryRepository } from '../../repositories/types/comments.query.repository.interface';
 import { CommentType } from '../types';
 import { CommentViewModel } from '../routers/output/comment.view.model';
 import { mapToCommentViewModel } from '../routers/handlers/mappers/map-to-comment-view-model';
 import { PromiseResult } from '../../../common/result/result.type';
 import { ResultStatus } from '../../../common/result/resultCode';
-import { postsRepository } from '../../repositories/posts.repository';
+import { commentsCollection } from '../../../db/mongo.db';
 
-export const commentsQwRepository = {
+@injectable()
+export class CommentsQueryRepository implements ICommentsQueryRepository {
+  @inject(TYPES.PostsRepository) private postsRepository!: IPostsRepository;
+  @inject(TYPES.CommentsRepository) private commentsRepository!: ICommentsRepository;
+
+  constructor() {}
+
   async findAllCommentsInPost({
     postId,
     sortQueryDto,
@@ -20,7 +29,7 @@ export const commentsQwRepository = {
   }): Promise<PromiseResult<IPagination<CommentViewModel[]>>> {
     const { pageNumber, pageSize, skip, sortBy, sortDirection } = sortQueryDto;
 
-    const post = await postsRepository.findById(postId);
+    const post = await this.postsRepository.findById(postId);
 
     if (!post) {
       return {
@@ -53,17 +62,19 @@ export const commentsQwRepository = {
         items: comments.map((c) => this._getInView(c)),
       },
     };
-  },
-  async findById(id: string): Promise<CommentViewModel | null> {
-    const result = await commentsRepository.findById(id);
+  }
+
+  async findById(commentId: string): Promise<CommentViewModel | null> {
+    const result = await this.commentsRepository.findById(commentId);
 
     return result ? this._getInView(result) : null;
-  },
+  }
 
-  _getInView(comment: WithId<CommentType>): CommentViewModel {
+  private _getInView(comment: WithId<CommentType>): CommentViewModel {
     return mapToCommentViewModel(comment);
-  },
-  _checkObjectId(id: string): boolean {
+  }
+
+  private _checkObjectId(id: string): boolean {
     return ObjectId.isValid(id);
-  },
-};
+  }
+}

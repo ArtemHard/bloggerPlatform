@@ -1,12 +1,19 @@
+import { inject, injectable } from 'inversify';
 import { IUserDB } from '../types/user.db.interface';
 import { CreateUserDto } from '../types/create-user.dto';
 import { WithId } from 'mongodb';
 import { bcryptService } from '../../../auth/adapters/bcrypt.service';
-import { usersRepository } from '../infrastructure/user.repository';
+import { TYPES } from '../../../ioc/ioc.types';
+import { IUsersRepository } from '../../repositories/types/users.repository.interface';
 import { ValidationError } from '../../../core/errors/errors.handler';
 import { User } from './user.entity';
 
-export const usersService = {
+@injectable()
+export class UsersService {
+  @inject(TYPES.UsersRepository) private usersRepository!: IUsersRepository;
+
+  constructor() {}
+
   async create(
     dto: CreateUserDto,
   ): Promise<WithId<Omit<IUserDB, 'passwordHash'>>> {
@@ -16,8 +23,8 @@ export const usersService = {
     const newUser: IUserDB = new User(login, email, passwordHash);
 
     const existingUser =
-      (await usersRepository.findByLoginOrEmail(newUser.email)) ||
-      (await usersRepository.findByLoginOrEmail(newUser.login));
+      (await this.usersRepository.findByLoginOrEmail(newUser.email)) ||
+      (await this.usersRepository.findByLoginOrEmail(newUser.login));
 
     if (existingUser) {
       const field = newUser.email === existingUser.email ? 'email' : 'login';
@@ -30,15 +37,15 @@ export const usersService = {
     }
 
     const { passwordHash: passwordHashFromDb, ...newUserFromDB } =
-      await usersRepository.create(newUser);
+      await this.usersRepository.create(newUser);
 
     return newUserFromDB;
-  },
+  }
 
   async delete(id: string): Promise<boolean> {
-    const user = await usersRepository.findById(id);
+    const user = await this.usersRepository.findById(id);
     if (!user) return false;
 
-    return await usersRepository.delete(id);
-  },
-};
+    return await this.usersRepository.delete(id);
+  }
+}

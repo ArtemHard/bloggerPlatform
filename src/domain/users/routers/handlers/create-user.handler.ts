@@ -2,10 +2,15 @@ import { Request, Response } from 'express';
 import { HttpStatus } from '../../../../core/types/http-statuses';
 import { createErrorMessages } from '../../../../core/middlewars/input-validtion-result.middleware';
 import { userInputDtoValidation } from '../../validation/userInputDtoValidation';
-import { usersService } from '../../domain/user.service';
-import { usersQwRepository } from '../../infrastructure/user.query.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { IUsersQueryRepository } from '../../../repositories/types/users-query.repository.interface';
+import { UsersService } from '../../domain/user.service';
 import { CreateUserDto } from '../../types/create-user.dto';
 import { ValidationError } from '../../../../core/errors/errors.handler';
+
+const usersQwRepository = container.get<IUsersQueryRepository>(TYPES.UsersQueryRepository);
+const usersService = container.get<UsersService>(TYPES.UsersService);
 
 export const createUserHandler = async (
   req: Request<{}, {}, CreateUserDto>,

@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { requestLogsRepository } from '../../domain/repositories/request-logs.repository';
+import { container } from '../../ioc/ioc.container';
+import { TYPES } from '../../ioc/ioc.types';
+import { IRequestLogsRepository } from '../../domain/repositories/types/request-logs.repository.interface';
 import { getRequestIp } from '../../core/utils/getRequestIp';
 
 export const rateLimitMiddleware = async (
@@ -7,6 +9,7 @@ export const rateLimitMiddleware = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const requestLogsRepository = container.get<IRequestLogsRepository>(TYPES.RequestLogsRepository);
   const ip = getRequestIp(req);
   const url = req.originalUrl;
   const attemptsLimit = 5;

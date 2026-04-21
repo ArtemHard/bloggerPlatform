@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId, WithId } from 'mongodb';
 import {
   parseQueryParams,
@@ -7,14 +8,16 @@ import { IPagination } from '../../../core/types/pagination';
 import { IUserView } from '../types/user.view.interface';
 import { usersCollection } from '../../../db/mongo.db';
 import { IUserDB } from '../types/user.db.interface';
+import { IUsersQueryRepository } from '../../repositories/types/users-query.repository.interface';
 
-export const usersQwRepository = {
+@injectable()
+export class UsersQueryRepository implements IUsersQueryRepository {
   async findAllUsers(
     sortQueryDto: QueryParams &
       Partial<{
         searchLoginTerm: string;
         searchEmailTerm: string;
-      }>,
+      }>
   ): Promise<IPagination<IUserView[]>> {
     const { searchEmailTerm, searchLoginTerm } = sortQueryDto;
 
@@ -57,20 +60,23 @@ export const usersQwRepository = {
       totalCount,
       items: users.map((u) => this._getInView(u)),
     };
-  },
+  }
+
   async findById(id: string): Promise<IUserView | null> {
     const user = await usersCollection.findOne({ _id: new ObjectId(id) });
     return user ? this._getInView(user) : null;
-  },
-  _getInView(user: WithId<IUserDB>): IUserView {
+  }
+
+  private _getInView(user: WithId<IUserDB>): IUserView {
     return {
       id: user._id.toString(),
       login: user.login,
       email: user.email,
       createdAt: user.createdAt.toISOString(),
     };
-  },
-  _checkObjectId(id: string): boolean {
+  }
+
+  private _checkObjectId(id: string): boolean {
     return ObjectId.isValid(id);
-  },
-};
+  }
+}

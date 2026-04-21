@@ -4,7 +4,11 @@ import { inputValidationResultMiddleware } from '../../../core/middlewars/input-
 
 import { paginationAndSortingValidation } from '../../../core/middlewars/validation/query-pagination-sorting.validation-middleware';
 
-import { usersQwRepository } from '../infrastructure/user.query.repository';
+import { container } from '../../../ioc/ioc.container';
+import { TYPES } from '../../../ioc/ioc.types';
+import { IUsersQueryRepository } from '../../repositories/types/users-query.repository.interface';
+
+const usersQwRepository = container.get<IUsersQueryRepository>(TYPES.UsersQueryRepository);
 import { superAdminGuardMiddleware } from '../../../middlewares/super-admin.guard-middleware';
 import { create } from 'node:domain';
 import { createUserHandler } from './handlers/create-user.handler';

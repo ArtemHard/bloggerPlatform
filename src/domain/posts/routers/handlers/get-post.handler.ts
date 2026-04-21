@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import { postsRepository } from '../../../repositories/posts.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { IPostsRepository } from '../../../repositories/types/posts.repository.interface';
+
+const postsRepository = container.get<IPostsRepository>(TYPES.PostsRepository);
 import { mapToPostViewModel } from './mappers/map-to-post-view-model';
 
 export const getPostHandler = async (

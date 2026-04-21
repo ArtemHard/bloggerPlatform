@@ -1,5 +1,7 @@
+import { injectable } from 'inversify';
 import { Collection, ObjectId } from 'mongodb';
 import { tokensCollection } from '../../db/mongo.db';
+import { ITokensRepository } from '../../domain/repositories/types/tokens.repository.interface';
 
 export interface IRefreshTokenDB {
   _id?: ObjectId;
@@ -11,11 +13,12 @@ export interface IRefreshTokenDB {
   deviceId?: string;
 }
 
-export const tokensRepository = {
+@injectable()
+export class TokensRepository implements ITokensRepository {
   async create(tokenData: Omit<IRefreshTokenDB, '_id'>): Promise<ObjectId> {
     const result = await tokensCollection.insertOne(tokenData);
     return result.insertedId;
-  },
+  }
 
   async findByToken(token: string): Promise<IRefreshTokenDB | null> {
     return tokensCollection.findOne({ 
@@ -23,7 +26,7 @@ export const tokensRepository = {
       isRevoked: false,
       expiresAt: { $gt: new Date() }
     });
-  },
+  }
 
   async revokeToken(token: string): Promise<boolean> {
     const result = await tokensCollection.updateOne(
@@ -31,7 +34,7 @@ export const tokensRepository = {
       { $set: { isRevoked: true } }
     );
     return result.matchedCount === 1;
-  },
+  }
 
   async revokeAllUserTokens(userId: string): Promise<boolean> {
     const result = await tokensCollection.updateMany(
@@ -39,7 +42,7 @@ export const tokensRepository = {
       { $set: { isRevoked: true } }
     );
     return result.matchedCount > 0;
-  },
+  }
 
   async revokeExpiredTokens(): Promise<boolean> {
     const result = await tokensCollection.updateMany(
@@ -50,14 +53,14 @@ export const tokensRepository = {
       { $set: { isRevoked: true } }
     );
     return result.matchedCount > 0;
-  },
+  }
 
   async deleteRevokedTokens(): Promise<boolean> {
     const result = await tokensCollection.deleteMany({
       isRevoked: true
     });
     return result.deletedCount > 0;
-  },
+  }
 
   async revokeTokensByUserIdAndDeviceId(userId: string, deviceId: string): Promise<boolean> {
     const result = await tokensCollection.updateMany(
@@ -66,4 +69,4 @@ export const tokensRepository = {
     );
     return result.matchedCount > 0;
   }
-};
+}

@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import { CommentsQueryInput, PostQueryInput } from '../input/post-query.input';
 import { parseQueryParams } from '../../../../core/utils/query-parser.util';
-import { commentsQwRepository } from '../../../comments/infrastructure/comments.query.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { ICommentsQueryRepository } from '../../../repositories/types/comments.query.repository.interface';
 import { mapToCommentsListByPostPaginatedOutput } from '../../../blog/routers/mappers/map-to-comments-list-by-post-paginated-output';
+
+const commentsQwRepository = container.get<ICommentsQueryRepository>(TYPES.CommentsQueryRepository);
 
 export const getAllCommentsByPostHandler = async (
   req: Request<{ id: string }, {}, {}, CommentsQueryInput>,

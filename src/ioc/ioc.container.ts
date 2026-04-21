@@ -1,0 +1,45 @@
+import { Container } from 'inversify';
+import { TYPES } from './ioc.types';
+import { IBlogsRepository } from '../domain/repositories/types/blogs.repository.interface';
+import { BlogsRepository } from '../domain/repositories/blogs.repository';
+import { ICommentsRepository } from '../domain/repositories/types/comments.repository.interface';
+import { CommentsRepository } from '../domain/repositories/comments.repository';
+import { IPostsRepository } from '../domain/repositories/types/posts.repository.interface';
+import { PostsRepository } from '../domain/repositories/posts.repository';
+import { IRequestLogsRepository } from '../domain/repositories/types/request-logs.repository.interface';
+import { RequestLogsRepository } from '../domain/repositories/request-logs.repository';
+import { IUsersRepository } from '../domain/repositories/types/users.repository.interface';
+import { UsersRepository } from '../domain/users/infrastructure/user.repository';
+import { ITokensRepository } from '../domain/repositories/types/tokens.repository.interface';
+import { TokensRepository } from '../auth/infrastructure/token.repository';
+import { ISecurityQueryRepository } from '../domain/repositories/types/security-query.repository.interface';
+import { SecurityQueryRepository } from '../auth/infrastructure/security.query.repository';
+import { IUsersQueryRepository } from '../domain/repositories/types/users-query.repository.interface';
+import { UsersQueryRepository } from '../domain/users/infrastructure/user.query.repository';
+import { ICommentsQueryRepository } from '../domain/repositories/types/comments.query.repository.interface';
+import { CommentsQueryRepository } from '../domain/comments/infrastructure/comments.query.repository';
+import { BlogService } from '../domain/blog/application/blog.service';
+import { PostsService } from '../domain/posts/application/posts.service';
+import { CommentsService } from '../domain/comments/infrastructure/comments.service';
+import { UsersService } from '../domain/users/domain/user.service';
+import { AuthService } from '../auth/domain/auth.service';
+import { SecurityService } from '../auth/domain/security.service';
+
+export const container = new Container();
+
+container.bind<IBlogsRepository>(TYPES.BlogsRepository).to(BlogsRepository);
+container.bind<ICommentsRepository>(TYPES.CommentsRepository).to(CommentsRepository);
+container.bind<IPostsRepository>(TYPES.PostsRepository).to(PostsRepository);
+container.bind<IRequestLogsRepository>(TYPES.RequestLogsRepository).to(RequestLogsRepository);
+container.bind<IUsersRepository>(TYPES.UsersRepository).to(UsersRepository);
+container.bind<ITokensRepository>(TYPES.TokensRepository).to(TokensRepository);
+container.bind<ISecurityQueryRepository>(TYPES.SecurityQueryRepository).to(SecurityQueryRepository);
+container.bind<IUsersQueryRepository>(TYPES.UsersQueryRepository).to(UsersQueryRepository);
+container.bind<ICommentsQueryRepository>(TYPES.CommentsQueryRepository).to(CommentsQueryRepository);
+
+container.bind<BlogService>(TYPES.BlogService).to(BlogService);
+container.bind<PostsService>(TYPES.PostsService).to(PostsService);
+container.bind<CommentsService>(TYPES.CommentsService).to(CommentsService);
+container.bind<UsersService>(TYPES.UsersService).to(UsersService);
+container.bind<AuthService>(TYPES.AuthService).to(AuthService);
+container.bind<SecurityService>(TYPES.SecurityService).to(SecurityService);

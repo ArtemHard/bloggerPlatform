@@ -7,8 +7,11 @@ import { CreateUserDto } from '../../../domain/users/types/create-user.dto';
 import { runDB, stopDb } from '../../../db/mongo.db';
 import { SETTINGS } from '../../../core/settings/settings';
 import { clearDb } from '../../../core/utils/clear-db';
-import { usersRepository } from '../../../domain/users/infrastructure/user.repository';
-import { log } from 'node:console';
+import { container } from '../../../ioc/ioc.container';
+import { TYPES } from '../../../ioc/ioc.types';
+import { IUsersRepository } from '../../../domain/repositories/types/users.repository.interface';
+
+const usersRepository = container.get<IUsersRepository>(TYPES.UsersRepository);
 
 jest.mock('nodemailer', () => {
   const mockTransporter = {

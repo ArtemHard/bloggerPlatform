@@ -13,4 +13,8 @@ export const appConfig = {
 //   DB_TYPE: process.env.DB_TYPE,
   EMAIL: process.env.EMAIL as string,
   EMAIL_PASS: process.env.EMAIL_PASS as string,
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY as string,
+  MAILGUN_API_KEY: process.env.MAILGUN_API_KEY as string,
+  MAILGUN_DOMAIN: process.env.MAILGUN_DOMAIN as string,
+  RESEND_API_KEY: process.env.RESEND_API_KEY as string,
 };

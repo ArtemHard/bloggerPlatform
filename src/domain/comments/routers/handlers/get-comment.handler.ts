@@ -1,7 +1,12 @@
 import { Request, Response } from 'express';
-import { commentsRepository } from '../../../repositories/comments.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { ICommentsRepository } from '../../../repositories/types/comments.repository.interface';
+import { ICommentsQueryRepository } from '../../../repositories/types/comments.query.repository.interface';
+
+const commentsRepository = container.get<ICommentsRepository>(TYPES.CommentsRepository);
+const commentsQwRepository = container.get<ICommentsQueryRepository>(TYPES.CommentsQueryRepository);
 import { mapToCommentViewModel } from './mappers/map-to-comment-view-model';
-import { commentsQwRepository } from '../../infrastructure/comments.query.repository';
 
 export const getCommentHandler = async (
   req: Request<{ id: string }>,

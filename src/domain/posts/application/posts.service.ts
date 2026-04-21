@@ -1,40 +1,47 @@
+import { inject, injectable } from 'inversify';
 import { WithId } from 'mongodb';
 import { PostQueryInput } from '../routers/input/post-query.input';
-import { postsRepository } from '../../repositories/posts.repository';
+import { TYPES } from '../../../ioc/ioc.types';
+import { IPostsRepository } from '../../repositories/types/posts.repository.interface';
+import { IBlogsRepository } from '../../repositories/types/blogs.repository.interface';
 import { Post } from '../../blog/validation/types/posts';
-import { blogsRepository } from '../../repositories/blogs.repository';
 import { PostInputDto } from '../dto/post.input-dto';
 
-export const postsService = {
+@injectable()
+export class PostsService {
+  @inject(TYPES.PostsRepository) private postsRepository!: IPostsRepository;
+  @inject(TYPES.BlogsRepository) private blogsRepository!: IBlogsRepository;
+
+  constructor() {}
+
   async findMany(
     queryDto: PostQueryInput,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
     //TODO вернуть пагинацию
-    return postsRepository.findMany(queryDto);
-  },
+    return this.postsRepository.findMany(queryDto);
+  }
 
   async findPostsByBlog(
     queryDto: PostQueryInput,
     blogId: string,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
-    await blogsRepository.findByIdOrFail(blogId);
+    await this.blogsRepository.findByIdOrFail(blogId);
 
-    return postsRepository.findPostsByBlog(queryDto, blogId);
-  },
+    return this.postsRepository.findPostsByBlog(queryDto, blogId);
+  }
 
   async createPostByBlog(
     dto: Omit<PostInputDto, 'blogId'>,
     blogId: string,
   ): Promise<WithId<Post>> {
+    await this.blogsRepository.findByIdOrFail(blogId);
 
-    await blogsRepository.findByIdOrFail(blogId);
-
-    return postsRepository.create({ ...dto, blogId });
-  },
+    return this.postsRepository.create({ ...dto, blogId });
+  }
 
   async findByIdOrFail(id: string): Promise<WithId<Post>> {
-    return postsRepository.findByIdOrFail(id);
-  },
+    return this.postsRepository.findByIdOrFail(id);
+  }
 
   // async create(dto: RideAttributes): Promise<string> {
   //   const driver = await driversRepository.findByIdOrFail(dto.driverId);

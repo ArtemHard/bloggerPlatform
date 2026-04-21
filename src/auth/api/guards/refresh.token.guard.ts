@@ -1,7 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { jwtService } from '../../adapters/jwt.service';
 import { IdType } from '../../../core/types/id';
-import { tokensRepository } from '../../infrastructure/token.repository';
+import { container } from '../../../ioc/ioc.container';
+import { TYPES } from '../../../ioc/ioc.types';
+import { ITokensRepository } from '../../../domain/repositories/types/tokens.repository.interface';
 
 declare global {
   namespace Express {
@@ -29,6 +31,7 @@ export const refreshTokenGuard = async (req: Request, res: Response, next: NextF
   }
 
   // Then check if token exists in database and is not revoked
+  const tokensRepository = container.get<ITokensRepository>(TYPES.TokensRepository);
   const tokenData = await tokensRepository.findByToken(refreshToken);
   if (!tokenData) {
     return res.sendStatus(401);

@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import { CommentInputDto } from '../../../comments/types/comments';
 import { ResultStatus } from '../../../../common/result/resultCode';
-import { commentsService } from '../../../comments/infrastructure/comments.service';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { CommentsService } from '../../../comments/infrastructure/comments.service';
+
+const commentsService = container.get<CommentsService>(TYPES.CommentsService);
 import { mapToCommentViewModel } from '../../../comments/routers/handlers/mappers/map-to-comment-view-model';
 import { commentInputDtoValidation } from '../../../comments/validation/commentInputDtoValidation';
 import { HttpStatus } from '../../../../core/types/http-statuses';

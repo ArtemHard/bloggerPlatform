@@ -1,17 +1,26 @@
-import { commentsRepository } from '../../repositories/comments.repository';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../../../ioc/ioc.types';
+import { ICommentsRepository } from '../../repositories/types/comments.repository.interface';
+import { IPostsRepository } from '../../repositories/types/posts.repository.interface';
+import { IUsersQueryRepository } from '../../repositories/types/users-query.repository.interface';
 import { PromiseResult } from '../../../common/result/result.type';
 import { ResultStatus } from '../../../common/result/resultCode';
-import { postsRepository } from '../../repositories/posts.repository';
-import { usersQwRepository } from '../../users/infrastructure/user.query.repository';
 import { WithId } from 'mongodb';
 import { CommentType } from '../types';
 
-export const commentsService = {
+@injectable()
+export class CommentsService {
+  @inject(TYPES.CommentsRepository) private commentsRepository!: ICommentsRepository;
+  @inject(TYPES.PostsRepository) private postsRepository!: IPostsRepository;
+  @inject(TYPES.UsersQueryRepository) private usersQwRepository!: IUsersQueryRepository;
+
+  constructor() {}
+
   async deleteCommentById(
     commentId: string,
     userId: string,
   ): Promise<PromiseResult<null>> {
-    const comment = await commentsRepository.findByIdOrFail(commentId);
+    const comment = await this.commentsRepository.findByIdOrFail(commentId);
 
     if (comment) {
       if (comment.commentatorInfo.userId !== userId) {
@@ -25,7 +34,7 @@ export const commentsService = {
         };
       }
 
-      await commentsRepository.delete(commentId);
+      await this.commentsRepository.delete(commentId);
 
       return {
         status: ResultStatus.Success,
@@ -39,7 +48,8 @@ export const commentsService = {
       data: null,
       extensions: [],
     };
-  },
+  }
+
   async updateCommentById({
     commentId,
     content,
@@ -49,7 +59,7 @@ export const commentsService = {
     userId: string;
     content: string;
   }): Promise<PromiseResult<null>> {
-    const comment = await commentsRepository.findByIdOrFail(commentId);
+    const comment = await this.commentsRepository.findByIdOrFail(commentId);
 
     if (comment) {
       if (comment.commentatorInfo.userId !== userId) {
@@ -63,7 +73,7 @@ export const commentsService = {
         };
       }
 
-      await commentsRepository.update(commentId, content);
+      await this.commentsRepository.update(commentId, content);
 
       return {
         status: ResultStatus.Success,
@@ -77,7 +87,8 @@ export const commentsService = {
       data: null,
       extensions: [],
     };
-  },
+  }
+
   async createComment({
     postId,
     content,
@@ -87,14 +98,14 @@ export const commentsService = {
     userId: string;
     content: string;
   }): Promise<PromiseResult<WithId<CommentType> | null>> {
-    const post = await postsRepository.findById(postId);
+    const post = await this.postsRepository.findById(postId);
 
-    const resultUser = await usersQwRepository.findById(userId);
+    const resultUser = await this.usersQwRepository.findById(userId);
 
     if (post && resultUser) {
       const { id, login } = resultUser;
 
-      const comment = await commentsRepository.create({
+      const comment = await this.commentsRepository.create({
         postId,
         content,
         commentatorInfo: {
@@ -117,7 +128,7 @@ export const commentsService = {
         ? [{ field: 'userId', message: 'user not found' }]
         : [{ field: 'postId', message: 'post not found' }],
     };
-  },
+  }
   // async findMany(
   //   queryDto: PostQueryInput,
   // ): Promise<{ items: WithId<Post>[]; totalCount: number }> {

@@ -9,4 +9,9 @@ export interface IUserDB {
     expirationDate: Date;
     isConfirmed: boolean;
   };
+  passwordRecovery: {
+    recoveryCode: string;
+    expirationDate: Date;
+    isConfirmed: boolean;
+  };
 }

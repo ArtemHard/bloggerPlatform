@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
-import { postsService } from '../../../posts/application/posts.service';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { PostsService } from '../../../posts/application/posts.service';
+
+const postsService = container.get<PostsService>(TYPES.PostsService);
 import { errorsHandler } from '../../../../core/errors/errors.handler';
 import { PostInputDto } from '../../../posts/dto/post.input-dto';
 import { mapToPostViewModel } from '../../../posts/routers/handlers/mappers/map-to-post-view-model';

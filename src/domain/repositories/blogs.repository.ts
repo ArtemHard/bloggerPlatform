@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { BlogInputDto } from '../blog/dto/blog.input-dto';
 import { Blog } from '../blog/validation/types/blog';
 import { ObjectId, WithId } from 'mongodb';
@@ -6,41 +7,31 @@ import { RepositoryNotFoundError } from '../../core/errors/repository-not-found.
 import { BlogQueryInput } from '../blog/routers/input/blog-query.input';
 import { parseQueryParams } from '../../core/utils/query-parser.util';
 import { findPaginated } from '../../core/utils/pagination.util';
+import { IBlogsRepository } from './types/blogs.repository.interface';
 
-export const blogsRepository = {
+@injectable()
+export class BlogsRepository implements IBlogsRepository {
   // Найти все blogs
   async findAllBlogs(
     queryDto: BlogQueryInput,
   ): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
-
     const { pageNumber, pageSize, sortBy, sortDirection, skip } =
       parseQueryParams(queryDto);
     const { searchNameTerm } = queryDto;
 
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
 
     if (searchNameTerm) {
       filter.name = { $regex: searchNameTerm, $options: 'i' };
     }
 
-    return findPaginated<Blog>(blogsCollection, filter, queryDto)
-    
-    // const items = await blogsCollection
-    //   .find(filter)
-    //   .sort({ [sortBy]: sortDirection })
-    //   .skip(skip)
-    //   .limit(pageSize)
-    //   .toArray();
-
-    // const totalCount = await blogsCollection.countDocuments(filter);
-
-    // return { items, totalCount };
-  },
+    return findPaginated<Blog>(blogsCollection, filter, queryDto);
+  }
 
   // Найти blog по ID
   async findById(id: string): Promise<WithId<Blog> | null> {
     return blogsCollection.findOne({ _id: new ObjectId(id) });
-  },
+  }
 
   async findByIdOrFail(id: string): Promise<WithId<Blog>> {
     const res = await blogsCollection.findOne({ _id: new ObjectId(id) });
@@ -49,7 +40,7 @@ export const blogsRepository = {
       throw new RepositoryNotFoundError('Blog not exist');
     }
     return res;
-  },
+  }
 
   // Создать нового blog
   async create(blog: BlogInputDto): Promise<WithId<Blog>> {
@@ -72,7 +63,7 @@ export const blogsRepository = {
     }
 
     return insertedBlog;
-  },
+  }
 
   // Обновить о названии и авторе
   async update(
@@ -96,7 +87,7 @@ export const blogsRepository = {
       throw new Error('Blog not exist');
     }
     return;
-  },
+  }
 
   // Удалить blog
   async delete(id: string): Promise<void> {
@@ -108,5 +99,5 @@ export const blogsRepository = {
       throw new Error('Driver not exist');
     }
     return;
-  },
-};
+  }
+}

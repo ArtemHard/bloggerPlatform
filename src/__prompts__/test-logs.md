@@ -1,67 +1,25 @@
-import { NextFunction, Request, Response } from 'express';
-import { requestLogsRepository } from '../repositories/request-logs.repositories';
-import { EHttpStatus } from './../../core/constants/http';
-import { getRequestIp } from '../../core/utils/getRequestIp';
+> Homework 10 Password recovery POST -> "auth/password-recovery": should send email with recovery code; status 204;
 
-type TArgs = {
-attemptsLimit: number;
-timeWindowDurationSeconds: number;
-};
+    expect(received).toEqual(expected) // deep equality
 
-const DEFAULT_ATTEMPTS_LIMIT = 5;
-const DEFAULT_TIME_WINDOW_DURATION_SECONDS = 10;
+    Expected: Any<String>
+    Received: null
 
-export const getRateLimitMiddleware =
-(args?: TArgs) => async (req: Request, res: Response, next: NextFunction) => {
-const attemptsLimit = args?.attemptsLimit || DEFAULT_ATTEMPTS_LIMIT;
-const timeWindowDurationSeconds =
-args?.timeWindowDurationSeconds || DEFAULT_TIME_WINDOW_DURATION_SECONDS;
+> Homework 10 Password recovery POST -> "auth/new-password": should return error if password is incorrect; status 400;
 
-    const ip = getRequestIp(req);
-    const url = req.originalUrl;
+    expect(received).not.toBeUndefined()
 
-    await requestLogsRepository.addRequestLog({ ip, url, date: new Date() });
+    Received: undefined
 
-    const requestsCount = await requestLogsRepository.getRequestByFilterCount({
-      ip,
-      url,
-      timeWindowDurationSeconds,
-    });
+> Homework 10 Password recovery POST -> "auth/new-password": should confirm password recovery; status 204;
 
-    if (requestsCount > attemptsLimit) {
-      return res.sendStatus(EHttpStatus.MANY_REQUESTS_429);
-    }
+    expect(received).not.toBeUndefined()
 
-    next();
+> Homework 10 Password recovery POST -> "auth/password-recovery": should return status 401 if try to login with old password; status 401;
 
-};
+    Expected: 401
+    Received: 200
 
-import { sub } from 'date-fns';
-import { requestLogsCollection } from '../../db/mongo.db';
-import { TRequestLogsDB } from '../domain/request-logs-db';
+> Homework 10 Password recovery POST -> "/auth/login": should sign in user with new password; status 200; content: JWT token;
 
-export const requestLogsRepository = {
-async addRequestLog(log: TRequestLogsDB): Promise<string> {
-const { insertedId } = await requestLogsCollection.insertOne(log);
-
-    return insertedId.toString();
-
-},
-
-async getRequestByFilterCount(
-filter: { timeWindowDurationSeconds: number } & Omit<
-TRequestLogsDB,
-'date' >,
-): Promise<number> {
-const count = await requestLogsCollection.countDocuments({
-ip: filter.ip,
-url: filter.url,
-date: {
-$gte: sub(new Date(), { seconds: filter.timeWindowDurationSeconds }),
-},
-});
-
-    return count;
-
-},
-};
+    expect(received).not.toBeUndefined()

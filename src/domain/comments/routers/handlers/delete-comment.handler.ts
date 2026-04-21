@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
-import { commentsService } from '../../infrastructure/comments.service';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { CommentsService } from '../../infrastructure/comments.service';
 import { ResultStatus } from '../../../../common/result/resultCode';
+
+const commentsService = container.get<CommentsService>(TYPES.CommentsService);
 
 
 export const deleteCommentHandler = async (

@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 
 import { CommentInputDto } from '../../types/comments';
-import { commentsService } from '../../infrastructure/comments.service';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { CommentsService } from '../../infrastructure/comments.service';
+
+const commentsService = container.get<CommentsService>(TYPES.CommentsService);
 import { ResultStatus } from '../../../../common/result/resultCode';
 import { commentInputDtoValidation } from '../../validation/commentInputDtoValidation';
 import { HttpStatus } from '../../../../core/types/http-statuses';

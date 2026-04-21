@@ -1,6 +1,10 @@
 import { Request, Response, Router } from 'express';
-import { securityService } from '../domain/security.service';
+import { container } from '../../ioc/ioc.container';
+import { TYPES } from '../../ioc/ioc.types';
+import { SecurityService } from '../domain/security.service';
 import { jwtService } from '../adapters/jwt.service';
+
+const securityService = container.get<SecurityService>(TYPES.SecurityService);
 import { refreshTokenGuard } from './guards/refresh.token.guard';
 import { RequestWithUserId } from '../../core/types/requests';
 import { IdType } from '../../core/types/id';

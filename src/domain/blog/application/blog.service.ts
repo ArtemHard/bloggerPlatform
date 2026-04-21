@@ -1,18 +1,25 @@
+import { inject, injectable } from 'inversify';
 import { WithId } from 'mongodb';
-import { postsRepository } from '../../repositories/posts.repository';
+import { TYPES } from '../../../ioc/ioc.types';
+import { IPostsRepository } from '../../repositories/types/posts.repository.interface';
+import { IBlogsRepository } from '../../repositories/types/blogs.repository.interface';
 import { Post } from '../validation/types/posts';
-import { blogsRepository } from '../../repositories/blogs.repository';
 import { BlogQueryInput } from '../routers/input/blog-query.input';
 import { BlogInputDto } from '../dto/blog.input-dto';
 import { Blog } from '../validation/types/blog';
 
-export const blogService = {
+@injectable()
+export class BlogService {
+  @inject(TYPES.PostsRepository) private postsRepository!: IPostsRepository;
+  @inject(TYPES.BlogsRepository) private blogsRepository!: IBlogsRepository;
+
+  constructor() {}
+
   async findMany(
     queryDto: BlogQueryInput,
   ): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
-
-    return blogsRepository.findAllBlogs(queryDto);
-  },
+    return this.blogsRepository.findAllBlogs(queryDto);
+  }
 
   // async findPostsByBlog(
   //   queryDto: BlogQueryInput,

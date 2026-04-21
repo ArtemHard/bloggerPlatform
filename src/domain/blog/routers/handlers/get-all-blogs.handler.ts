@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import { BlogQueryInput } from '../input/blog-query.input';
-import { blogService } from '../../application/blog.service';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { BlogService } from '../../application/blog.service';
 import { mapToBlogListPaginatedOutput } from '../mappers/map-to-blog-list-paginated-output';
 import { parseQueryParams } from '../../../../core/utils/query-parser.util';
+
+const blogService = container.get<BlogService>(TYPES.BlogService);
 
 export const getAllBlogsHandler = async (
   req: Request<{}, {}, {}, BlogQueryInput>,

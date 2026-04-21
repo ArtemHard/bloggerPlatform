@@ -12,6 +12,11 @@ export class User {
     expirationDate: Date;
     isConfirmed: boolean;
   };
+  passwordRecovery: {
+    recoveryCode: string;
+    expirationDate: Date;
+    isConfirmed: boolean;
+  };
 
   constructor(login: string, email: string, hash: string) {
     this.login = login;
@@ -22,6 +27,12 @@ export class User {
     this.emailConfirmation = {
       expirationDate: expirationDateFunc(), // +1 час
       confirmationCode: randomUUID(),
+      isConfirmed: false,
+    };
+
+    this.passwordRecovery = {
+      expirationDate: expirationDateFunc(), // +1 uur
+      recoveryCode: randomUUID(),
       isConfirmed: false,
     };
   }

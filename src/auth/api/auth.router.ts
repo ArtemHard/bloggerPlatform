@@ -7,8 +7,20 @@ import {
 } from '../../core/middlewars/input-validtion-result.middleware';
 import { rateLimitMiddleware } from '../../core/middlewars/rate-limit.middleware';
 import { EmailDto, LoginDto } from '../types/login.dto';
-import { authService } from '../domain/auth.service';
+import { container } from '../../ioc/ioc.container';
+import { TYPES } from '../../ioc/ioc.types';
+import { AuthService } from '../domain/auth.service';
 import { jwtService } from '../adapters/jwt.service';
+import { nodemailerService } from '../adapters/nodemailer.service';
+import { emailExamples } from '../adapters/emailExamples';
+import { IUsersQueryRepository } from '../../domain/repositories/types/users-query.repository.interface';
+import { appConfig } from '../../common/config/config';
+import nodemailer from 'nodemailer';
+
+const authService = container.get<AuthService>(TYPES.AuthService);
+const usersQwRepository = container.get<IUsersQueryRepository>(
+  TYPES.UsersQueryRepository,
+);
 import { HttpStatus } from '../../core/types/http-statuses';
 import { ResultStatus } from '../../common/result/resultCode';
 import { resultCodeToHttpException } from '../../common/result/resultCodeToHttpException';
@@ -16,11 +28,11 @@ import { accessTokenGuard } from './guards/access.token.guard';
 import { refreshTokenGuard } from './guards/refresh.token.guard';
 import { RequestWithUserId } from '../../core/types/requests';
 import { IdType } from '../../core/types/id';
-import { usersQwRepository } from '../../domain/users/infrastructure/user.query.repository';
 import { emailInputDtoValidation } from '../validation/userInputDtoValidation';
 import { CreateUserDto } from '../../domain/users/types/create-user.dto';
 import { createUserSchema } from '../validation/shemas/create-user-shema';
 import { createUserInputDtoValidation } from '../validation/createUserInputDtoValidation';
+import { newPasswordInputDtoValidation } from '../validation/newPasswordValidation';
 import { ValidationError } from '../../core/types/validationError';
 
 export const authRouter = Router();
@@ -38,7 +50,12 @@ authRouter
       const userAgent = req.headers['user-agent'] || 'Unknown Device';
 
       try {
-        const result = await authService.loginUser(loginOrEmail, password, ip, userAgent);
+        const result = await authService.loginUser(
+          loginOrEmail,
+          password,
+          ip,
+          userAgent,
+        );
 
         if (result.status !== ResultStatus.Success || result.data === null) {
           const statusCode = resultCodeToHttpException(result.status);
@@ -71,12 +88,17 @@ authRouter
       const userId = req.user?.id as string;
       const oldRefreshToken = (req as any).refreshToken;
 
-      if (!userId || !oldRefreshToken) return res.sendStatus(HttpStatus.Unauthorized);
+      if (!userId || !oldRefreshToken)
+        return res.sendStatus(HttpStatus.Unauthorized);
 
       const tokenData = await jwtService.verifyRefreshToken(oldRefreshToken);
       if (!tokenData) return res.sendStatus(HttpStatus.Unauthorized);
 
-      const result = await authService.refreshTokens(userId, oldRefreshToken, tokenData.deviceId);
+      const result = await authService.refreshTokens(
+        userId,
+        oldRefreshToken,
+        tokenData.deviceId,
+      );
 
       if (result.status !== ResultStatus.Success) {
         return res.sendStatus(HttpStatus.Unauthorized);
@@ -154,26 +176,6 @@ authRouter
       }
       return res.sendStatus(HttpStatus.NoContent);
     },
-    // .post(
-    //   'registration-email-resending',
-    //   async (req: Request<{}, {}, EmailDto>, res: Response) => {
-    //     const { email } = req.body;
-
-    //     const errors = emailInputDtoValidation({ email });
-
-    //     if (errors.length > 0) {
-    //       return res
-    //         .status(HttpStatus.BadRequest)
-    //         .send(createErrorMessages(errors));
-    //     }
-
-    //     const result = await authService.resendRegistrationEmail(email);
-    //     if (result.status !== ResultStatus.Success) {
-    //       const statusCode = resultCodeToHttpException(result.status);
-    //       return res.status(statusCode).send(result.extensions);
-    //     }
-    //     return res.sendStatus(HttpStatus.NoContent);
-    //   },
   )
   //Confirm registration
   .post(
@@ -187,7 +189,9 @@ authRouter
       // const result = await authService.registerUser({email, login, password});
       if (result.status !== ResultStatus.Success) {
         const statusCode = resultCodeToHttpException(result.status);
-        return res.status(statusCode).send(createErrorMessages(result.extensions as ValidationError[]));
+        return res
+          .status(statusCode)
+          .send(createErrorMessages(result.extensions as ValidationError[]));
       }
       return res.sendStatus(HttpStatus.NoContent);
     },
@@ -211,8 +215,104 @@ authRouter
 
       if (result.status !== ResultStatus.Success) {
         const statusCode = resultCodeToHttpException(result.status);
-        return res.status(statusCode).send(createErrorMessages(result.extensions as ValidationError[]));
+        return res
+          .status(statusCode)
+          .send(createErrorMessages(result.extensions as ValidationError[]));
       }
       return res.sendStatus(HttpStatus.NoContent);
+    },
+  )
+  .post(
+    '/password-recovery',
+    rateLimitMiddleware,
+    async (req: Request<{}, {}, { email: string }>, res: Response) => {
+      console.log('=== PASSWORD RECOVERY REQUEST ===');
+      const { email } = req.body;
+      console.log('Request body email:', email);
+
+      const errors = emailInputDtoValidation({ email });
+
+      if (errors.length > 0) {
+        console.log('Validation errors:', errors);
+        return res
+          .status(HttpStatus.BadRequest)
+          .send(createErrorMessages(errors));
+      }
+
+      console.log('Calling authService.passwordRecovery...');
+      const result = await authService.passwordRecovery(email);
+      console.log('Password recovery result:', result.status);
+
+      if (result.status !== ResultStatus.Success) {
+        const statusCode = resultCodeToHttpException(result.status);
+        console.log('Password recovery failed, status:', statusCode);
+        return res.status(statusCode).send(result.extensions);
+      }
+      console.log('Password recovery successful, returning 204');
+      return res.sendStatus(HttpStatus.NoContent);
+    },
+  )
+  .post(
+    '/new-password',
+    rateLimitMiddleware,
+    async (
+      req: Request<{}, {}, { newPassword: string; recoveryCode: string }>,
+      res: Response,
+    ) => {
+      const { newPassword, recoveryCode } = req.body;
+
+      // Validate input using Zod schema
+      const errors = newPasswordInputDtoValidation({
+        newPassword,
+        recoveryCode,
+      });
+
+      if (errors.length > 0) {
+        return res
+          .status(HttpStatus.BadRequest)
+          .send(createErrorMessages(errors));
+      }
+
+      const result = await authService.confirmNewPassword(
+        recoveryCode,
+        newPassword,
+      );
+
+      if (result.status !== ResultStatus.Success) {
+        const statusCode = resultCodeToHttpException(result.status);
+        return res
+          .status(statusCode)
+          .send(createErrorMessages(result.extensions as ValidationError[]));
+      }
+      return res.sendStatus(HttpStatus.NoContent);
+    },
+  )
+
+  // Test email sending with detailed logs
+  .post(
+    '/test-email-send',
+    rateLimitMiddleware,
+    async (req: Request<{}, {}, { email: string }>, res: Response) => {
+      console.log('=== TEST EMAIL SEND ===');
+      const { email } = req.body;
+      console.log('Request body email:', email);
+
+      const errors = emailInputDtoValidation({ email });
+      if (errors.length > 0) {
+        console.log('Validation errors:', errors);
+        return res
+          .status(HttpStatus.BadRequest)
+          .send(createErrorMessages(errors));
+      }
+
+      console.log('Calling nodemailerService.sendEmail...');
+      const result = await nodemailerService.sendEmail(
+        email,
+        'test-code-12345',
+        emailExamples.passwordRecoveryEmail,
+      );
+
+      console.log('Test email result:', result);
+      return res.status(HttpStatus.Ok).json(result);
     },
   );

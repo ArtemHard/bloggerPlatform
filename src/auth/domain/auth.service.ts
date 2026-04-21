@@ -1,6 +1,10 @@
+import { inject, injectable } from 'inversify';
 import { WithId } from 'mongodb';
 import { PromiseResult } from '../../common/result/result.type';
-import { usersRepository } from '../../domain/users/infrastructure/user.repository';
+import { TYPES } from '../../ioc/ioc.types';
+import { IUsersRepository } from '../../domain/repositories/types/users.repository.interface';
+import { IRequestLogsRepository } from '../../domain/repositories/types/request-logs.repository.interface';
+import { ITokensRepository } from '../../domain/repositories/types/tokens.repository.interface';
 import { bcryptService } from '../adapters/bcrypt.service';
 import { IUserDB } from '../../domain/users/types/user.db.interface';
 import { ResultStatus } from '../../common/result/resultCode';
@@ -11,14 +15,19 @@ import {
   expirationDateFunc,
   User,
 } from '../../domain/users/domain/user.entity';
-import { nodemailerService } from '../adapters/nodemailer.service';
-import { emailExamples } from '../adapters/emailExamples';
 import e from 'express';
 import { randomUUID } from 'node:crypto';
-import { tokensRepository } from '../infrastructure/token.repository';
-import { requestLogsRepository } from '../../domain/repositories/request-logs.repository';
+import { nodemailerService } from '../adapters/nodemailer.service';
+import { emailExamples } from '../adapters/emailExamples';
 
-export const authService = {
+@injectable()
+export class AuthService {
+  @inject(TYPES.UsersRepository) private usersRepository!: IUsersRepository;
+  @inject(TYPES.RequestLogsRepository) private requestLogsRepository!: IRequestLogsRepository;
+  @inject(TYPES.TokensRepository) private tokensRepository!: ITokensRepository;
+
+  constructor() {}
+
   async loginUser(
     loginOrEmail: string,
     password: string,
@@ -45,7 +54,7 @@ export const authService = {
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + (process.env.RT_TIME ? parseInt(process.env.RT_TIME, 10) : 20));
 
-    await tokensRepository.create({
+    await this.tokensRepository.create({
       userId,
       token: refreshToken,
       createdAt: new Date(),
@@ -55,7 +64,7 @@ export const authService = {
     });
 
     // Create device record
-    await requestLogsRepository.createDevice({
+    await this.requestLogsRepository.createDevice({
       IP: ip,
       URL: '',
       date: new Date(),
@@ -70,7 +79,7 @@ export const authService = {
       data: { accessToken, refreshToken, deviceId },
       extensions: [],
     };
-  },
+  }
 
   async refreshTokens(
     userId: string,
@@ -78,10 +87,10 @@ export const authService = {
     deviceId: string,
   ): Promise<PromiseResult<{ accessToken: string; refreshToken: string } | null>> {
     // Revoke the old refresh token
-    await tokensRepository.revokeToken(oldRefreshToken);
+    await this.tokensRepository.revokeToken(oldRefreshToken);
 
     // Clean up expired tokens
-    await tokensRepository.revokeExpiredTokens();
+    await this.tokensRepository.revokeExpiredTokens();
 
     const accessToken = await jwtService.createAccessToken(userId);
     const refreshToken = await jwtService.createRefreshToken(userId, deviceId);
@@ -90,7 +99,7 @@ export const authService = {
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + (process.env.RT_TIME ? parseInt(process.env.RT_TIME, 10) : 20));
 
-    await tokensRepository.create({
+    await this.tokensRepository.create({
       userId,
       token: refreshToken,
       createdAt: new Date(),
@@ -100,20 +109,20 @@ export const authService = {
     });
 
     // Update device lastActiveDate and exp
-    await requestLogsRepository.updateLastActiveDate(deviceId, new Date(), expiresAt);
+    await this.requestLogsRepository.updateLastActiveDate(deviceId, new Date(), expiresAt);
 
     return {
       status: ResultStatus.Success,
       data: { accessToken, refreshToken },
       extensions: [],
     };
-  },
+  }
 
   async checkUserCredentials(
     loginOrEmail: string,
     password: string,
   ): Promise<PromiseResult<WithId<IUserDB> | null>> {
-    const user = await usersRepository.findByLoginOrEmail(loginOrEmail);
+    const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
 
     if (!user)
       return {
@@ -141,13 +150,14 @@ export const authService = {
       data: user,
       extensions: [],
     };
-  },
+  }
+
   async registerUser({
     email,
     login,
     password,
   }: CreateUserDto): Promise<PromiseResult<any>> {
-    const user = await usersRepository.doesExistByLoginOrEmail(login, email);
+    const user = await this.usersRepository.doesExistByLoginOrEmail(login, email);
 
     if (user)
       return {
@@ -166,7 +176,7 @@ export const authService = {
 
     const newUser = new User(login, email, passwordHash);
 
-    await usersRepository.create(newUser);
+    await this.usersRepository.create(newUser);
 
     nodemailerService
       .sendEmail(
@@ -181,7 +191,7 @@ export const authService = {
       data: null,
       extensions: [],
     };
-  },
+  }
 
   async confirmEmail(code: string): Promise<PromiseResult<any>> {
     //TODO confirm email some logic
@@ -199,7 +209,7 @@ export const authService = {
       };
     }
 
-    const user = await usersRepository.getUserByConfirmEmailCode(code);
+    const user = await this.usersRepository.getUserByConfirmEmailCode(code);
 
     if (!user) {
       return {
@@ -229,17 +239,17 @@ export const authService = {
         extensions: [{ field: 'code', message: 'code alredy expired' }],
       };
 
-    await usersRepository.confirmEmail(user._id.toString());
+    await this.usersRepository.confirmEmail(user._id.toString());
 
     return {
       status: ResultStatus.Success,
       data: null,
       extensions: [],
     };
-  },
+  }
 
   async logout(refreshToken: string, deviceId: string): Promise<PromiseResult<null>> {
-    const tokenExists = await tokensRepository.findByToken(refreshToken);
+    const tokenExists = await this.tokensRepository.findByToken(refreshToken);
 
     if (!tokenExists) {
       return {
@@ -251,20 +261,20 @@ export const authService = {
     }
 
     // Revoke the specific refresh token
-    await tokensRepository.revokeToken(refreshToken);
+    await this.tokensRepository.revokeToken(refreshToken);
 
     // Delete device record
-    await requestLogsRepository.deleteByDeviceId(deviceId);
+    await this.requestLogsRepository.deleteByDeviceId(deviceId);
 
     return {
       status: ResultStatus.Success,
       data: null,
       extensions: [],
     };
-  },
+  }
 
   async resendRegistrationEmail({ email }: EmailDto) {
-    const user = await usersRepository.findByLoginOrEmail(email);
+    const user = await this.usersRepository.findByLoginOrEmail(email);
 
     if (!user)
       return {
@@ -284,7 +294,7 @@ export const authService = {
 
     const newConfirmationCode = randomUUID();
 
-    const updateResult = await usersRepository.updateEmailConfirmation({
+    const updateResult = await this.usersRepository.updateEmailConfirmation({
       id: user._id.toString(),
       code: newConfirmationCode,
       expirationDate: expirationDateFunc(),
@@ -316,19 +326,131 @@ export const authService = {
       data: null,
       extensions: [],
     };
-  },
+  }
 
-  // async resendRegistrationEmail({email}: EmailDto) {
+  async passwordRecovery(email: string): Promise<PromiseResult<any>> {
+    console.log('Password recovery requested for email:', email);
+    
+    const user = await this.usersRepository.findByLoginOrEmail(email);
+    console.log('User found:', !!user);
 
-  //   const user = await usersRepository.findByLoginOrEmail(email);
+    // Always return success for security (prevent email enumeration)
+    if (!user) {
+      console.log('User not found, returning success for security');
+      return {
+        status: ResultStatus.Success,
+        data: null,
+        extensions: [],
+      };
+    }
 
-  //   if (!user)
-  //     return {
-  //       status: ResultStatus.NotFound,
-  //       data: null,
-  //       errorMessage: 'Not Found',
-  //       extensions: [{ field: 'loginOrEmail', message: 'Not Found' }],
-  //     };
+    const newRecoveryCode = randomUUID();
+    console.log('Generated recovery code:', newRecoveryCode);
 
-  // }
-};
+    const updateResult = await this.usersRepository.updatePasswordRecovery({
+      id: user._id.toString(),
+      code: newRecoveryCode,
+      expirationDate: expirationDateFunc(),
+    });
+
+    console.log('Database update result:', !!updateResult);
+
+    if (!updateResult) {
+      console.log('Failed to update recovery code in database');
+      return {
+        status: ResultStatus.BadRequest,
+        data: null,
+        errorMessage: 'Cannot update recovery code',
+        extensions: [
+          { field: 'code', message: 'Cannot update code to database' },
+        ],
+      };
+    }
+
+    console.log('Attempting to send password recovery email...');
+    const emailResult = await nodemailerService.sendEmail(
+      user.email,
+      newRecoveryCode,
+      emailExamples.passwordRecoveryEmail(newRecoveryCode),
+    );
+    
+    if (!emailResult.success) {
+      console.error('Password recovery email failed:', emailResult.error);
+    } else {
+      console.log('Password recovery email sent successfully');
+    }
+
+    return {
+      status: ResultStatus.Success,
+      data: null,
+      extensions: [],
+    };
+  }
+
+  async confirmNewPassword(recoveryCode: string, newPassword: string): Promise<PromiseResult<any>> {
+    const isUuid = new RegExp(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    ).test(recoveryCode);
+
+    if (!isUuid) {
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'Bad Request',
+        data: null,
+        extensions: [{ field: 'recoveryCode', message: 'Incorrect recovery code' }],
+      };
+    }
+
+    const user = await this.usersRepository.getUserByRecoveryCode(recoveryCode);
+
+    if (!user) {
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'Bad Request',
+        data: null,
+        extensions: [{ field: 'recoveryCode', message: 'Recovery code does not exist' }],
+      };
+    }
+
+    if (user.passwordRecovery.isConfirmed) {
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'Bad Request',
+        data: null,
+        extensions: [{ field: 'recoveryCode', message: 'Recovery code already been applied' }],
+      };
+    }
+
+    const expirationDate = new Date(user.passwordRecovery.expirationDate);
+
+    if (expirationDate < new Date())
+      return {
+        status: ResultStatus.BadRequest,
+        errorMessage: 'Bad Request',
+        data: null,
+        extensions: [{ field: 'recoveryCode', message: 'Recovery code already expired' }],
+      };
+
+    const updateResult = await this.usersRepository.confirmPasswordRecovery(
+      user._id.toString(),
+      newPassword
+    );
+
+    if (!updateResult) {
+      return {
+        status: ResultStatus.BadRequest,
+        data: null,
+        errorMessage: 'Cannot update password',
+        extensions: [
+          { field: 'newPassword', message: 'Cannot update password to database' },
+        ],
+      };
+    }
+
+    return {
+      status: ResultStatus.Success,
+      data: null,
+      extensions: [],
+    };
+  }
+}

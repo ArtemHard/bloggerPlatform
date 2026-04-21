@@ -2,7 +2,11 @@ import { Response } from 'express';
 import { RequestWithQuery } from '../../../../core/types/requests';
 import { UsersQueryFieldsType } from './input/user-query.input';
 import { parseQueryParams } from '../../../../core/utils/query-parser.util';
-import { usersQwRepository } from '../../infrastructure/user.query.repository';
+import { container } from '../../../../ioc/ioc.container';
+import { TYPES } from '../../../../ioc/ioc.types';
+import { IUsersQueryRepository } from '../../../repositories/types/users-query.repository.interface';
+
+const usersQwRepository = container.get<IUsersQueryRepository>(TYPES.UsersQueryRepository);
 
 export const getUsersHandler = async (
     req: RequestWithQuery<UsersQueryFieldsType>,
