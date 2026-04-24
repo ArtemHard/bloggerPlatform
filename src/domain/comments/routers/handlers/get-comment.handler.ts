@@ -12,7 +12,8 @@ export const getCommentHandler = async (
   req: Request<{ id: string }>,
   res: Response,
 ) => {
-  const result = await commentsQwRepository.findById(req.params.id);
+  const currentUserId = req.user?.id; // Получаем ID текущего пользователя
+  const result = await commentsQwRepository.findById(req.params.id, currentUserId);
 
   if (result) {
     res.status(200).send(result);

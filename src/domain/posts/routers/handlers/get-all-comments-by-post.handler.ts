@@ -18,6 +18,7 @@ export const getAllCommentsByPostHandler = async (
     parseQueryParams(queryInput);
 
   try {
+    const currentUserId = req.user?.id; // Получаем ID текущего пользователя
     const { data, status } = await commentsQwRepository.findAllCommentsInPost({
       postId: req.params.id,
       sortQueryDto: {
@@ -27,6 +28,7 @@ export const getAllCommentsByPostHandler = async (
         sortDirection,
         skip,
       },
+      currentUserId,
     });
 
     if (status === 'NotFound') {

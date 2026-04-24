@@ -7,10 +7,12 @@ export interface ICommentsQueryRepository {
   findAllCommentsInPost({
     postId,
     sortQueryDto,
+    currentUserId,
   }: {
     postId: string;
     sortQueryDto: QueryParams;
+    currentUserId?: string;
   }): Promise<PromiseResult<IPagination<CommentViewModel[]>>>;
 
-  findById(commentId: string): Promise<CommentViewModel | null>;
+  findById(commentId: string, currentUserId?: string): Promise<CommentViewModel | null>;
 }

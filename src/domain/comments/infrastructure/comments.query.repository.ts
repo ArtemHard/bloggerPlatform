@@ -23,9 +23,11 @@ export class CommentsQueryRepository implements ICommentsQueryRepository {
   async findAllCommentsInPost({
     postId,
     sortQueryDto,
+    currentUserId,
   }: {
     postId: string;
     sortQueryDto: QueryParams;
+    currentUserId?: string;
   }): Promise<PromiseResult<IPagination<CommentViewModel[]>>> {
     const { pageNumber, pageSize, skip, sortBy, sortDirection } = sortQueryDto;
 
@@ -59,19 +61,19 @@ export class CommentsQueryRepository implements ICommentsQueryRepository {
         page: pageNumber,
         pageSize: pageSize,
         totalCount,
-        items: comments.map((c) => this._getInView(c)),
+        items: comments.map((c) => this._getInView(c, currentUserId)),
       },
     };
   }
 
-  async findById(commentId: string): Promise<CommentViewModel | null> {
+  async findById(commentId: string, currentUserId?: string): Promise<CommentViewModel | null> {
     const result = await this.commentsRepository.findById(commentId);
 
-    return result ? this._getInView(result) : null;
+    return result ? this._getInView(result, currentUserId) : null;
   }
 
-  private _getInView(comment: WithId<CommentType>): CommentViewModel {
-    return mapToCommentViewModel(comment);
+  private _getInView(comment: WithId<CommentType>, currentUserId?: string): CommentViewModel {
+    return mapToCommentViewModel(comment, currentUserId);
   }
 
   private _checkObjectId(id: string): boolean {

@@ -7,6 +7,7 @@ import { PromiseResult } from '../../../common/result/result.type';
 import { ResultStatus } from '../../../common/result/resultCode';
 import { WithId } from 'mongodb';
 import { CommentType } from '../types';
+import { LikeStatus } from '../enums/like-status.enum';
 
 @injectable()
 export class CommentsService {
@@ -127,6 +128,34 @@ export class CommentsService {
       extensions: !resultUser
         ? [{ field: 'userId', message: 'user not found' }]
         : [{ field: 'postId', message: 'post not found' }],
+    };
+  }
+
+  async updateLikeStatus({
+    commentId,
+    userId,
+    likeStatus,
+  }: {
+    commentId: string;
+    userId: string;
+    likeStatus: LikeStatus;
+  }): Promise<PromiseResult<null>> {
+    const comment = await this.commentsRepository.findByIdOrFail(commentId);
+
+    if (!comment) {
+      return {
+        status: ResultStatus.NotFound,
+        data: null,
+        extensions: [{ field: 'commentId', message: 'Comment not found' }],
+      };
+    }
+
+    await this.commentsRepository.updateLikeStatus(commentId, userId, likeStatus);
+
+    return {
+      status: ResultStatus.Success,
+      data: null,
+      extensions: [],
     };
   }
   // async findMany(

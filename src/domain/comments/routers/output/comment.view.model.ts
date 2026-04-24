@@ -1,3 +1,5 @@
+import { LikesInfo } from '../../types/comments';
+
 export type CommentViewModel = {
   id: string;
   content: string;
@@ -6,4 +8,5 @@ export type CommentViewModel = {
     userLogin: string;
   };
   createdAt: string;
+  likesInfo: LikesInfo;
 };

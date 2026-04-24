@@ -11,6 +11,7 @@ import { paginationAndSortingValidation } from '../../../core/middlewars/validat
 import { PostSortField } from './input/post-sort-field';
 import { createCommentHandler } from './handlers/create-comment.handler';
 import { accessTokenGuard } from '../../../auth/api/guards/access.token.guard';
+import { optionalAccessTokenGuard } from '../../../auth/api/guards/optional.access.token.guard';
 import { getAllCommentsByPostHandler } from './handlers/get-all-comments-by-post.handler';
 import { CommentsSortField } from './input/comments-sort-field';
 
@@ -46,6 +47,7 @@ postsRouter
   .get(
     '/:id/comments',
     idValidation,
+    optionalAccessTokenGuard,
     paginationAndSortingValidation(CommentsSortField),
     inputValidationResultMiddleware,
     // @ts-ignore не понятно, почему не видит типизацию для query
