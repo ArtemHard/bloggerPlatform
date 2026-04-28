@@ -1,12 +1,12 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "h11 API - V1",
-    "description": "“Like for comment” entity was added\n\nAn authorized user can like the comment",
-    "version": "h11"
+    "title": "h12 API - V1",
+    "description": "“Like for post” entity was added\n\nAn authorized user can like the post",
+    "version": "h12"
   },
   "paths": {
-    "/hometask_11/api/auth/login": {
+    "/hometask_12/api/auth/login": {
       "post": {
         "tags": ["Auth"],
         "summary": "Try login user to the system",
@@ -79,7 +79,7 @@
         }
       }
     },
-    "/hometask_11/api/auth/password-recovery": {
+    "/hometask_12/api/auth/password-recovery": {
       "post": {
         "tags": ["Auth"],
         "summary": "Password recovery via Email confirmation. Email should be sent with RecoveryCode inside",
@@ -116,7 +116,7 @@
         }
       }
     },
-    "/hometask_11/api/auth/new-password": {
+    "/hometask_12/api/auth/new-password": {
       "post": {
         "tags": ["Auth"],
         "summary": "Confirm Password recovery",
@@ -152,7 +152,7 @@
         }
       }
     },
-    "/hometask_11/api/auth/refresh-token": {
+    "/hometask_12/api/auth/refresh-token": {
       "post": {
         "tags": ["Auth"],
         "summary": "Generate new pair of access and refresh tokens (in cookie client must send correct refreshToken that will be revoked after refreshing)\r\nDevice LastActiveDate should be overrode by issued Date of new refresh token",
@@ -192,7 +192,7 @@
         ]
       }
     },
-    "/hometask_11/api/auth/registration-confirmation": {
+    "/hometask_12/api/auth/registration-confirmation": {
       "post": {
         "tags": ["Auth"],
         "summary": "Confirm registration",
@@ -245,7 +245,7 @@
         }
       }
     },
-    "/hometask_11/api/auth/registration": {
+    "/hometask_12/api/auth/registration": {
       "post": {
         "tags": ["Auth"],
         "summary": "Registration in the system. Email with confirmation code will be send to passed email address",
@@ -299,7 +299,7 @@
         }
       }
     },
-    "/hometask_11/api/auth/registration-email-resending": {
+    "/hometask_12/api/auth/registration-email-resending": {
       "post": {
         "tags": ["Auth"],
         "summary": "Resend confirmation registration Email if user exists",
@@ -353,7 +353,7 @@
         }
       }
     },
-    "/hometask_11/api/auth/logout": {
+    "/hometask_12/api/auth/logout": {
       "post": {
         "tags": ["Auth"],
         "summary": "In cookie client must send correct refreshToken that will be revoked",
@@ -376,7 +376,7 @@
         ]
       }
     },
-    "/hometask_11/api/auth/me": {
+    "/hometask_12/api/auth/me": {
       "get": {
         "tags": ["Auth"],
         "summary": "Get information about current user",
@@ -412,7 +412,7 @@
         ]
       }
     },
-    "/hometask_11/api/blogs": {
+    "/hometask_12/api/blogs": {
       "get": {
         "tags": ["Blogs"],
         "summary": "Returns blogs with paging",
@@ -563,7 +563,7 @@
         ]
       }
     },
-    "/hometask_11/api/blogs/{blogId}/posts": {
+    "/hometask_12/api/blogs/{blogId}/posts": {
       "get": {
         "tags": ["Blogs"],
         "summary": "Returns all posts for specified blog",
@@ -621,17 +621,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Paginator<h03.PostViewModel>"
+                  "$ref": "#/components/schemas/Paginator<h12.PostViewModel>"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Paginator<h03.PostViewModel>"
+                  "$ref": "#/components/schemas/Paginator<h12.PostViewModel>"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Paginator<h03.PostViewModel>"
+                  "$ref": "#/components/schemas/Paginator<h12.PostViewModel>"
                 }
               }
             }
@@ -680,17 +680,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               }
             }
@@ -729,7 +729,7 @@
         ]
       }
     },
-    "/hometask_11/api/blogs/{id}": {
+    "/hometask_12/api/blogs/{id}": {
       "get": {
         "tags": ["Blogs"],
         "summary": "Returns blog by id",
@@ -872,7 +872,7 @@
         ]
       }
     },
-    "/hometask_11/api/comments/{commentId}/like-status": {
+    "/hometask_12/api/comments/{commentId}/like-status": {
       "put": {
         "tags": ["Comments"],
         "summary": "Make like/unlike/dislike/undislike operation",
@@ -944,7 +944,7 @@
         ]
       }
     },
-    "/hometask_11/api/comments/{commentId}": {
+    "/hometask_12/api/comments/{commentId}": {
       "put": {
         "tags": ["Comments"],
         "summary": "Update existing comment by id with InputModel",
@@ -1053,7 +1053,7 @@
         ]
       }
     },
-    "/hometask_11/api/comments/{id}": {
+    "/hometask_12/api/comments/{id}": {
       "get": {
         "tags": ["Comments"],
         "summary": "Return comment by id",
@@ -1095,7 +1095,79 @@
         }
       }
     },
-    "/hometask_11/api/posts/{postId}/comments": {
+    "/hometask_12/api/posts/{postId}/like-status": {
+      "put": {
+        "tags": ["Posts"],
+        "summary": "Make like/unlike/dislike/undislike operation",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Like model for make like/dislike/reset operation",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/h11.LikeInputModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/h11.LikeInputModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/h11.LikeInputModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "If the inputModel has incorrect values",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIErrorResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIErrorResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIErrorResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "If post with specified postId doesn't exists"
+          }
+        },
+        "security": [
+          {
+            "bearer": ["Policy:", "Roles:", "AuthenticationSchemes:"]
+          }
+        ]
+      }
+    },
+    "/hometask_12/api/posts/{postId}/comments": {
       "get": {
         "tags": ["Posts"],
         "summary": "Returns comments for specified post",
@@ -1261,7 +1333,7 @@
         ]
       }
     },
-    "/hometask_11/api/posts": {
+    "/hometask_12/api/posts": {
       "get": {
         "tags": ["Posts"],
         "summary": "Returns all posts",
@@ -1311,17 +1383,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/Paginator<h03.PostViewModel>"
+                  "$ref": "#/components/schemas/Paginator<h12.PostViewModel>"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Paginator<h03.PostViewModel>"
+                  "$ref": "#/components/schemas/Paginator<h12.PostViewModel>"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Paginator<h03.PostViewModel>"
+                  "$ref": "#/components/schemas/Paginator<h12.PostViewModel>"
                 }
               }
             }
@@ -1357,17 +1429,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               }
             }
@@ -1403,7 +1475,7 @@
         ]
       }
     },
-    "/hometask_11/api/posts/{id}": {
+    "/hometask_12/api/posts/{id}": {
       "get": {
         "tags": ["Posts"],
         "summary": "Return post by id",
@@ -1424,17 +1496,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/h03.PostViewModel"
+                  "$ref": "#/components/schemas/h12.PostViewModel"
                 }
               }
             }
@@ -1546,7 +1618,7 @@
         ]
       }
     },
-    "/hometask_11/api/security/devices": {
+    "/hometask_12/api/security/devices": {
       "get": {
         "tags": ["SecurityDevices"],
         "summary": "Returns all devices with active sessions for current user",
@@ -1616,7 +1688,7 @@
         ]
       }
     },
-    "/hometask_11/api/security/devices/{deviceId}": {
+    "/hometask_12/api/security/devices/{deviceId}": {
       "delete": {
         "tags": ["SecurityDevices"],
         "summary": "Terminate specified device session",
@@ -1656,7 +1728,7 @@
         ]
       }
     },
-    "/hometask_11/api/testing/all-data": {
+    "/hometask_12/api/testing/all-data": {
       "delete": {
         "tags": ["Testing"],
         "summary": "Clear database: delete all data from all tables/collections",
@@ -1667,7 +1739,7 @@
         }
       }
     },
-    "/hometask_11/api/users": {
+    "/hometask_12/api/users": {
       "get": {
         "tags": ["Users"],
         "summary": "Returns all users",
@@ -1835,7 +1907,7 @@
         ]
       }
     },
-    "/hometask_11/api/users/{id}": {
+    "/hometask_12/api/users/{id}": {
       "delete": {
         "tags": ["Users"],
         "summary": "Delete user specified by id",
@@ -1929,35 +2001,6 @@
         },
         "additionalProperties": false
       },
-      "Paginator<h03.PostViewModel>": {
-        "required": ["items"],
-        "type": "object",
-        "properties": {
-          "pagesCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/h03.PostViewModel"
-            }
-          }
-        },
-        "additionalProperties": false
-      },
       "Paginator<h05.db.UserViewModel>": {
         "required": ["items"],
         "type": "object",
@@ -2011,6 +2054,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/h11.CommentViewModel"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "Paginator<h12.PostViewModel>": {
+        "required": ["items"],
+        "type": "object",
+        "properties": {
+          "pagesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/h12.PostViewModel"
             }
           }
         },
@@ -2100,42 +2172,6 @@
           "isMembership": {
             "type": "boolean",
             "description": "True if user has not expired membership subscription to blog"
-          }
-        },
-        "additionalProperties": false
-      },
-      "h03.PostViewModel": {
-        "required": [
-          "blogId",
-          "blogName",
-          "content",
-          "id",
-          "shortDescription",
-          "title"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "shortDescription": {
-            "type": "string"
-          },
-          "content": {
-            "type": "string"
-          },
-          "blogId": {
-            "type": "string"
-          },
-          "blogName": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "additionalProperties": false
@@ -2383,6 +2419,91 @@
           },
           "myStatus": {
             "$ref": "#/components/schemas/h11.LikeStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "h12.ExtendedLikesInfoViewModel": {
+        "type": "object",
+        "properties": {
+          "likesCount": {
+            "type": "integer",
+            "description": "Total likes for parent item",
+            "format": "int32"
+          },
+          "dislikesCount": {
+            "type": "integer",
+            "description": "Total dislikes for parent item",
+            "format": "int32"
+          },
+          "myStatus": {
+            "$ref": "#/components/schemas/h11.LikeStatus"
+          },
+          "newestLikes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/h12.LikeDetailsViewModel"
+            },
+            "description": "Last 3 likes (status \"Like\")",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "h12.LikeDetailsViewModel": {
+        "type": "object",
+        "properties": {
+          "addedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "login": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Details about single like"
+      },
+      "h12.PostViewModel": {
+        "required": [
+          "blogId",
+          "blogName",
+          "content",
+          "id",
+          "shortDescription",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "blogId": {
+            "type": "string"
+          },
+          "blogName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "extendedLikesInfo": {
+            "$ref": "#/components/schemas/h12.ExtendedLikesInfoViewModel"
           }
         },
         "additionalProperties": false
