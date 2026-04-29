@@ -1,83 +1,105 @@
 ## Задача
 
-Необходимо реализовать использование Mongoose в src/domain/users/infrastructure/user.repository.ts.
+Реализовать использование Mongoose в `src/domain/users/infrastructure/user.repository.ts` с DDD подходом, а так же остальных связанных слоёв напрмиер user.service
 
-точка входа для инициализации mongoose src\db\mongo.db.ts
+Точка входа для инициализации: `src/db/mongo.db.ts`
 
-## Нужно:
+## Основные требования
 
-определить Mongoose-схему для моделей на основе уже существующих интерфейсов.
+1. **Схема Mongoose**: Создать на основе существующих интерфейсов
+2. **Репозиторий**: Заменить текущую реализацию на операции через Mongoose
+3. **CRUD операции**: Сохранение и изменение записей через Mongoose модели
 
-заменить существующую работу с user на корректные операции через Mongoose;
+## Примеры реализации
 
-сохранять и изменять записи в базе данных через модель Mongoose.
+### Базовая схема и модель:
 
-## Пример реализации
-
-ts
+```typescript
 const userSchema = new mongoose.Schema<User>({
-name: { type: String, required: true },
-age: { type: Number, required: true },
-wallets: { type: [walletSchema], default: [] },
+  name: { type: String, required: true },
+  age: { type: Number, required: true },
+  wallets: { type: [walletSchema], default: [] },
 });
 
 export const UserModel = model<User, UserModelType>('users-l4', userSchema);
+```
 
-const user = new UserModel(dto);
+### Репозиторий:
 
-user.wallets = [];
+```typescript
+export class UsersRepository {
+  async findById(id: string): Promise<UserDocument | null> {
+    return UserModel.findOne({ _id: id });
+  }
 
-if (user.age > 18) {
-user.wallets = [
-{ balance: 100, createdAt: new Date(), currency: Currency.BTC },
-];
+  async createUser(dto: CreateUserDto) {
+    const user = new UserModel(dto);
+    // бизнес-логика
+    if (user.age > 18) {
+      user.wallets = [
+        { balance: 100, createdAt: new Date(), currency: Currency.BTC },
+      ];
+    }
+    await user.save();
+  }
+
+  async save(user: UserDocument) {
+    return user.save();
+  }
 }
+```
 
-await this.userRepository.save(user);
-// Пример 2:
-import { BlogType } from '../routes/blogs-router'
-import { BlogModel } from '../mongo/blog/blog.model'
+### Сервис (application слой):
 
-export const BlogsRepository = {
-async getBlogs(): Promise<BlogType[]> {
-return BlogModel.find({},{\_id: 0 })
-},
+```typescript
+export class UserService {
+  constructor(private userRepository: UsersRepository) {}
 
-    async getBlogById(id: string): Promise<BlogType | null> {
-        return BlogModel.findOne({ id },{ _id: 0 })
-    },
-
-    async updateBlog(
-        id: string,
-        body: {name: 'string',description: 'string'}
-    ): Promise<boolean> {
-        const res = await BlogModel.updateOne({ id }, body)
-        return res.matchedCount === 1
-    },
-
-    async deleteBlog(id: string): Promise<boolean> {
-        const res = await BlogModel.deleteOne({ id })
-        return res.deletedCount === 1
-    },
-
+  async createUser(dto: CreateUserDto) {
+    const user = new UserModel(dto);
+    // бизнес-логика
+    await this.userRepository.save(user);
+  }
 }
+```
 
-## Контекст
+### DDD с методами в схеме:
 
-Учитывать правила из rules.md.
-Общаться и писать ответы на русском языке.
-Не переписывать реализации других ручек.
+```typescript
+const userMethods = {
+  convertMoney(fromWalletId: string, toWalletId: string, amount: number) {
+    // логика конвертации
+  },
+};
 
-## Что нужно сделать
+const userStatics = {
+  createUser(dto: CreateUserDto) {
+    // фабричный метод
+  },
+};
 
-Реализовывать изменения поэтапно.
-После каждого этапа проверять типизацию и запуск:
+userSchema.methods = userMethods;
+userSchema.statics = userStatics;
+```
+
+## Порядок выполнения
+
+1. Создать Mongoose схемы на основе существующих интерфейсов
+2. Реализовать репозиторий с базовыми CRUD операциями
+3. Обновить сервисы для работы с новым репозиторием
+4. Проверить типизацию и функциональность
+
+## Проверка
+
+После каждого этапа:
+
+```bash
 npm run watch
 npm run dev
-Исправлять все ошибки до успешного результата.
+```
 
 ## Критерии готовности
 
-Типизация без ошибок.
-Приложение запускается через npm run dev.
-Изменения соответствуют rules.md.
+- Типизация без ошибок
+- Приложение запускается через `npm run dev`
+- Соблюдаются правила из `src/__prompts__/common-rules.md`

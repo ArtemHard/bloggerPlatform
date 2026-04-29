@@ -1,20 +1,18 @@
 import { injectable } from 'inversify';
 import { BlogInputDto } from '../blog/dto/blog.input-dto';
 import { Blog } from '../blog/validation/types/blog';
-import { ObjectId, WithId } from 'mongodb';
-import { blogsCollection } from '../../db/mongo.db';
 import { RepositoryNotFoundError } from '../../core/errors/repository-not-found.error';
 import { BlogQueryInput } from '../blog/routers/input/blog-query.input';
-import { findPaginated } from '../../core/utils/pagination.util';
 import { IBlogsRepository } from './types/blogs.repository.interface';
+import { BlogModel, BlogDocument } from '../blog/domain/blog.schema';
 
 @injectable()
 export class BlogsRepository implements IBlogsRepository {
-  // Найти все blogs
+  // Find all blogs
   async findAllBlogs(
     queryDto: BlogQueryInput,
-  ): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
-    const { searchNameTerm } = queryDto;
+  ): Promise<{ items: BlogDocument[]; totalCount: number }> {
+    const { searchNameTerm, pageNumber = 1, pageSize = 10, sortBy = 'createdAt', sortDirection = 'desc' } = queryDto;
 
     const filter: Record<string, unknown> = {};
 
@@ -22,16 +20,25 @@ export class BlogsRepository implements IBlogsRepository {
       filter.name = { $regex: searchNameTerm, $options: 'i' };
     }
 
-    return findPaginated<Blog>(blogsCollection, filter, queryDto);
+    const skip = (pageNumber - 1) * pageSize;
+    const totalCount = await BlogModel.countDocuments(filter);
+    
+    const blogs = await BlogModel
+      .find(filter)
+      .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
+      .skip(skip)
+      .limit(pageSize);
+
+    return { items: blogs, totalCount };
   }
 
-  // Найти blog по ID
-  async findById(id: string): Promise<WithId<Blog> | null> {
-    return blogsCollection.findOne({ _id: new ObjectId(id) });
+  // Find blog by ID
+  async findById(id: string): Promise<BlogDocument | null> {
+    return BlogModel.findById(id);
   }
 
-  async findByIdOrFail(id: string): Promise<WithId<Blog>> {
-    const res = await blogsCollection.findOne({ _id: new ObjectId(id) });
+  async findByIdOrFail(id: string): Promise<BlogDocument> {
+    const res = await BlogModel.findById(id);
 
     if (!res) {
       throw new RepositoryNotFoundError('Blog not exist');
@@ -39,38 +46,20 @@ export class BlogsRepository implements IBlogsRepository {
     return res;
   }
 
-  // Создать нового blog
-  async create(blog: BlogInputDto): Promise<WithId<Blog>> {
-    const createdAt = new Date().toISOString();
-    const isMembership = false;
-
-    const insertResult = await blogsCollection.insertOne({
-      ...blog,
-      createdAt,
-      isMembership,
-    });
-
-    // Получаем полный документ из базы
-    const insertedBlog = await blogsCollection.findOne({
-      _id: insertResult.insertedId,
-    });
-
-    if (!insertedBlog) {
-      throw new Error('Failed to retrieve inserted blog');
-    }
-
-    return insertedBlog;
+  // Create new blog
+  async create(blog: BlogInputDto): Promise<BlogDocument> {
+    const newBlog = BlogModel.createBlog(blog.name, blog.description, blog.websiteUrl);
+    await newBlog.save();
+    return newBlog;
   }
 
-  // Обновить о названии и авторе
+  // Update name and author
   async update(
     blogId: string,
     { description, name, websiteUrl }: BlogInputDto,
   ): Promise<void> {
-    const updateResult = await blogsCollection.updateOne(
-      {
-        _id: new ObjectId(blogId),
-      },
+    const updateResult = await BlogModel.updateOne(
+      { _id: blogId },
       {
         $set: {
           name,
@@ -80,20 +69,18 @@ export class BlogsRepository implements IBlogsRepository {
       },
     );
 
-    if (updateResult.matchedCount < 1) {
+    if (updateResult.modifiedCount < 1) {
       throw new Error('Blog not exist');
     }
     return;
   }
 
-  // Удалить blog
+  // Delete blog
   async delete(id: string): Promise<void> {
-    const deleteResult = await blogsCollection.deleteOne({
-      _id: new ObjectId(id),
-    });
+    const deleteResult = await BlogModel.deleteOne({ _id: id });
 
     if (deleteResult.deletedCount < 1) {
-      throw new Error('Driver not exist');
+      throw new Error('Blog not exist');
     }
     return;
   }

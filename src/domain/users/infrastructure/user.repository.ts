@@ -1,30 +1,29 @@
 import { injectable } from 'inversify';
-import { ObjectId, WithId } from 'mongodb';
 import { IUserDB } from '../types/user.db.interface';
-import { usersCollection } from '../../../db/mongo.db';
 import { IUsersRepository } from '../../repositories/types/users.repository.interface';
+import { UserModel, UserDocument } from '../domain/user.schema';
 
 @injectable()
 export class UsersRepository implements IUsersRepository {
-  async create(user: IUserDB): Promise<WithId<IUserDB>> {
-    const newUser = await usersCollection.insertOne({ ...user });
-
-    return { ...user, _id: newUser.insertedId };
+  async create(user: IUserDB): Promise<UserDocument> {
+    const newUser = new UserModel(user);
+    await newUser.save();
+    return newUser;
   }
 
   async delete(id: string): Promise<boolean> {
-    const isDel = await usersCollection.deleteOne({ _id: new ObjectId(id) });
-    return isDel.deletedCount === 1;
+    const result = await UserModel.deleteOne({ _id: id });
+    return result.deletedCount === 1;
   }
 
-  async findById(id: string): Promise<WithId<IUserDB> | null> {
-    return usersCollection.findOne({ _id: new ObjectId(id) });
+  async findById(id: string): Promise<UserDocument | null> {
+    return UserModel.findById(id);
   }
 
   async findByLoginOrEmail(
     loginOrEmail: string,
-  ): Promise<WithId<IUserDB> | null> {
-    return usersCollection.findOne({
+  ): Promise<UserDocument | null> {
+    return UserModel.findOne({
       $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
     });
   }
@@ -32,8 +31,8 @@ export class UsersRepository implements IUsersRepository {
   async doesExistByLoginOrEmail(
     login: string,
     email: string,
-  ): Promise<WithId<IUserDB> | null> {
-    const user = await usersCollection.findOne({
+  ): Promise<UserDocument | null> {
+    const user = await UserModel.findOne({
       $or: [{ email }, { login }],
     });
     return user;
@@ -41,16 +40,16 @@ export class UsersRepository implements IUsersRepository {
 
   async getUserByConfirmEmailCode(
     code: string,
-  ): Promise<WithId<IUserDB> | null> {
-    return await usersCollection.findOne({
+  ): Promise<UserDocument | null> {
+    return UserModel.findOne({
       'emailConfirmation.confirmationCode': code,
     });
   }
 
   async confirmEmail(id: string): Promise<boolean> {
-    const result = await usersCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { 'emailConfirmation.isConfirmed': true } },
+    const result = await UserModel.updateOne(
+      { _id: id },
+      { 'emailConfirmation.isConfirmed': true },
     );
     return result.matchedCount === 1;
   }
@@ -64,13 +63,11 @@ export class UsersRepository implements IUsersRepository {
     code: string;
     expirationDate: Date;
   }): Promise<boolean> {
-    const result = await usersCollection.updateOne(
-      { _id: new ObjectId(id) },
+    const result = await UserModel.updateOne(
+      { _id: id },
       {
-        $set: {
-          'emailConfirmation.confirmationCode': code,
-          'emailConfirmation.expirationDate': expirationDate,
-        },
+        'emailConfirmation.confirmationCode': code,
+        'emailConfirmation.expirationDate': expirationDate,
       },
     );
     return result.matchedCount === 1;
@@ -78,8 +75,8 @@ export class UsersRepository implements IUsersRepository {
 
   async getUserByRecoveryCode(
     code: string,
-  ): Promise<WithId<IUserDB> | null> {
-    return await usersCollection.findOne({
+  ): Promise<UserDocument | null> {
+    return UserModel.findOne({
       'passwordRecovery.recoveryCode': code,
     });
   }
@@ -93,42 +90,14 @@ export class UsersRepository implements IUsersRepository {
     code: string;
     expirationDate: Date;
   }): Promise<boolean> {
-    // First check if user has passwordRecovery field
-    const user = await usersCollection.findOne({ _id: new ObjectId(id) });
-    
-    if (!user) {
-      return false;
-    }
-
-    let result;
-    if (user.passwordRecovery) {
-      // Update existing passwordRecovery field
-      result = await usersCollection.updateOne(
-        { _id: new ObjectId(id) },
-        {
-          $set: {
-            'passwordRecovery.recoveryCode': code,
-            'passwordRecovery.expirationDate': expirationDate,
-            'passwordRecovery.isConfirmed': false,
-          },
-        }
-      );
-    } else {
-      // Create passwordRecovery field for existing users
-      result = await usersCollection.updateOne(
-        { _id: new ObjectId(id) },
-        {
-          $set: {
-            passwordRecovery: {
-              recoveryCode: code,
-              expirationDate: expirationDate,
-              isConfirmed: false,
-            },
-          },
-        }
-      );
-    }
-    
+    const result = await UserModel.updateOne(
+      { _id: id },
+      {
+        'passwordRecovery.recoveryCode': code,
+        'passwordRecovery.expirationDate': expirationDate,
+        'passwordRecovery.isConfirmed': false,
+      },
+    );
     return result.matchedCount === 1;
   }
 
@@ -136,42 +105,13 @@ export class UsersRepository implements IUsersRepository {
     const { bcryptService } = await import('../../../auth/adapters/bcrypt.service');
     const passwordHash = await bcryptService.generateHash(newPassword);
     
-    // First check if user has passwordRecovery field
-    const user = await usersCollection.findOne({ _id: new ObjectId(id) });
-    
-    if (!user) {
-      return false;
-    }
-
-    let result;
-    if (user.passwordRecovery) {
-      // Update existing passwordRecovery field
-      result = await usersCollection.updateOne(
-        { _id: new ObjectId(id) },
-        {
-          $set: {
-            passwordHash: passwordHash,
-            'passwordRecovery.isConfirmed': true,
-          },
-        }
-      );
-    } else {
-      // Create passwordRecovery field for existing users and update password
-      result = await usersCollection.updateOne(
-        { _id: new ObjectId(id) },
-        {
-          $set: {
-            passwordHash: passwordHash,
-            passwordRecovery: {
-              recoveryCode: '',
-              expirationDate: new Date(),
-              isConfirmed: true,
-            },
-          },
-        }
-      );
-    }
-    
+    const result = await UserModel.updateOne(
+      { _id: id },
+      {
+        passwordHash: passwordHash,
+        'passwordRecovery.isConfirmed': true,
+      },
+    );
     return result.matchedCount === 1;
   }
 }

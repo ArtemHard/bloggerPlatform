@@ -1,14 +1,14 @@
-import { WithId } from 'mongodb';
 import { CommentInputDto } from '../../comments/dto/comment.input-dto';
 import { CommentType } from '../../comments/types';
 import { LikeStatus } from '../../comments/enums/like-status.enum';
+import { CommentDocument } from '../../comments/domain/comment.schema';
 
 export interface ICommentsRepository {
-  findById(id: string): Promise<WithId<CommentType> | null>;
+  findById(id: string): Promise<CommentDocument | null>;
 
-  findByIdOrFail(id: string): Promise<WithId<CommentType> | null>;
+  findByIdOrFail(id: string): Promise<CommentDocument | null>;
 
-  create(dto: CommentInputDto): Promise<WithId<CommentType>>;
+  create(dto: CommentInputDto, userId: string, userLogin: string, postId: string): Promise<CommentDocument>;
 
   update(commentId: string, content: string): Promise<void>;
 

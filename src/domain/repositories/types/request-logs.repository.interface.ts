@@ -1,4 +1,3 @@
-import { ObjectId } from 'mongodb';
 import { IRequestLog } from './request-log.interface';
 
 export interface IRequestLogsRepository {
@@ -10,7 +9,7 @@ export interface IRequestLogsRepository {
     timeWindowDurationSeconds: number
   ): Promise<number>;
 
-  createDevice(deviceData: Omit<IRequestLog, '_id'>): Promise<ObjectId>;
+  createDevice(deviceData: Omit<IRequestLog, '_id'>): Promise<string>;
 
   findByDeviceId(deviceId: string): Promise<IRequestLog | null>;
 

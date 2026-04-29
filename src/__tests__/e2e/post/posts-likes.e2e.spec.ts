@@ -1,15 +1,16 @@
 import supertest from 'supertest';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { setupApp } from '../../../setup-app';
 import { HttpStatus } from '../../../core/types/http-statuses';
 import { POSTS_PATH, BLOGS_PATH } from '../../../core/paths/paths';
 import { runDB, stopDb } from '../../../db/mongo.db';
 import { SETTINGS } from '../../../core/settings/settings';
 import { clearDb } from '../../../core/utils/clear-db';
+import { PostViewModel } from '../../../domain/posts/types/posts';
 
 // Mock rate limiting middleware to bypass rate limiting in tests
 jest.mock('../../../core/middlewars/rate-limit.middleware', () => ({
-  rateLimitMiddleware: async (_: any, __: any, next: any) => {
+  rateLimitMiddleware: async (_req: Request, _res: Response, next: NextFunction) => {
     next();
   },
 }));
@@ -209,7 +210,7 @@ describe('Posts Likes API', () => {
     expect(response.body.items).toHaveLength(6);
 
     // Verify post 1 (2 likes)
-    const post1 = response.body.items.find((item: any) => item.id === postIds[0]);
+    const post1 = response.body.items.find((item: PostViewModel) => item.id === postIds[0]);
     expect(post1).toBeDefined();
     expect(post1.extendedLikesInfo.likesCount).toBe(2);
     expect(post1.extendedLikesInfo.dislikesCount).toBe(0);
@@ -217,7 +218,7 @@ describe('Posts Likes API', () => {
     expect(post1.extendedLikesInfo.newestLikes).toHaveLength(2);
 
     // Verify post 2 (2 likes)
-    const post2 = response.body.items.find((item: any) => item.id === postIds[1]);
+    const post2 = response.body.items.find((item: PostViewModel) => item.id === postIds[1]);
     expect(post2).toBeDefined();
     expect(post2.extendedLikesInfo.likesCount).toBe(2);
     expect(post2.extendedLikesInfo.dislikesCount).toBe(0);
@@ -225,7 +226,7 @@ describe('Posts Likes API', () => {
     expect(post2.extendedLikesInfo.newestLikes).toHaveLength(2);
 
     // Verify post 3 (1 dislike)
-    const post3 = response.body.items.find((item: any) => item.id === postIds[2]);
+    const post3 = response.body.items.find((item: PostViewModel) => item.id === postIds[2]);
     expect(post3).toBeDefined();
     expect(post3.extendedLikesInfo.likesCount).toBe(0);
     expect(post3.extendedLikesInfo.dislikesCount).toBe(1);
@@ -233,7 +234,7 @@ describe('Posts Likes API', () => {
     expect(post3.extendedLikesInfo.newestLikes).toHaveLength(0);
 
     // Verify post 4 (4 likes)
-    const post4 = response.body.items.find((item: any) => item.id === postIds[3]);
+    const post4 = response.body.items.find((item: PostViewModel) => item.id === postIds[3]);
     expect(post4).toBeDefined();
     expect(post4.extendedLikesInfo.likesCount).toBe(4);
     expect(post4.extendedLikesInfo.dislikesCount).toBe(0);
@@ -249,7 +250,7 @@ describe('Posts Likes API', () => {
     }
 
     // Verify post 5 (1 like, 1 dislike)
-    const post5 = response.body.items.find((item: any) => item.id === postIds[4]);
+    const post5 = response.body.items.find((item: PostViewModel) => item.id === postIds[4]);
     expect(post5).toBeDefined();
     expect(post5.extendedLikesInfo.likesCount).toBe(1);
     expect(post5.extendedLikesInfo.dislikesCount).toBe(1);
@@ -257,7 +258,7 @@ describe('Posts Likes API', () => {
     expect(post5.extendedLikesInfo.newestLikes).toHaveLength(1);
 
     // Verify post 6 (1 like, 1 dislike)
-    const post6 = response.body.items.find((item: any) => item.id === postIds[5]);
+    const post6 = response.body.items.find((item: PostViewModel) => item.id === postIds[5]);
     expect(post6).toBeDefined();
     expect(post6.extendedLikesInfo.likesCount).toBe(1);
     expect(post6.extendedLikesInfo.dislikesCount).toBe(1);
@@ -358,7 +359,7 @@ describe('Posts Likes API', () => {
     expect(response.body.items).toHaveLength(6);
 
     // Verify post 1 (2 likes)
-    const post1 = response.body.items.find((item: any) => item.id === postIds[0]);
+    const post1 = response.body.items.find((item: PostViewModel) => item.id === postIds[0]);
     expect(post1).toBeDefined();
     expect(post1.extendedLikesInfo.likesCount).toBe(2);
     expect(post1.extendedLikesInfo.dislikesCount).toBe(0);
@@ -366,7 +367,7 @@ describe('Posts Likes API', () => {
     expect(post1.extendedLikesInfo.newestLikes).toHaveLength(2);
 
     // Verify post 2 (2 likes)
-    const post2 = response.body.items.find((item: any) => item.id === postIds[1]);
+    const post2 = response.body.items.find((item: PostViewModel) => item.id === postIds[1]);
     expect(post2).toBeDefined();
     expect(post2.extendedLikesInfo.likesCount).toBe(2);
     expect(post2.extendedLikesInfo.dislikesCount).toBe(0);
@@ -374,7 +375,7 @@ describe('Posts Likes API', () => {
     expect(post2.extendedLikesInfo.newestLikes).toHaveLength(2);
 
     // Verify post 3 (1 dislike)
-    const post3 = response.body.items.find((item: any) => item.id === postIds[2]);
+    const post3 = response.body.items.find((item: PostViewModel) => item.id === postIds[2]);
     expect(post3).toBeDefined();
     expect(post3.extendedLikesInfo.likesCount).toBe(0);
     expect(post3.extendedLikesInfo.dislikesCount).toBe(1);
@@ -382,7 +383,7 @@ describe('Posts Likes API', () => {
     expect(post3.extendedLikesInfo.newestLikes).toHaveLength(0);
 
     // Verify post 4 (4 likes)
-    const post4 = response.body.items.find((item: any) => item.id === postIds[3]);
+    const post4 = response.body.items.find((item: PostViewModel) => item.id === postIds[3]);
     expect(post4).toBeDefined();
     expect(post4.extendedLikesInfo.likesCount).toBe(4);
     expect(post4.extendedLikesInfo.dislikesCount).toBe(0);
@@ -398,7 +399,7 @@ describe('Posts Likes API', () => {
     }
 
     // Verify post 5 (1 like, 1 dislike)
-    const post5 = response.body.items.find((item: any) => item.id === postIds[4]);
+    const post5 = response.body.items.find((item: PostViewModel) => item.id === postIds[4]);
     expect(post5).toBeDefined();
     expect(post5.extendedLikesInfo.likesCount).toBe(1);
     expect(post5.extendedLikesInfo.dislikesCount).toBe(1);
@@ -406,7 +407,7 @@ describe('Posts Likes API', () => {
     expect(post5.extendedLikesInfo.newestLikes).toHaveLength(1);
 
     // Verify post 6 (1 like, 1 dislike)
-    const post6 = response.body.items.find((item: any) => item.id === postIds[5]);
+    const post6 = response.body.items.find((item: PostViewModel) => item.id === postIds[5]);
     expect(post6).toBeDefined();
     expect(post6.extendedLikesInfo.likesCount).toBe(1);
     expect(post6.extendedLikesInfo.dislikesCount).toBe(1);

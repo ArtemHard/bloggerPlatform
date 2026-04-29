@@ -10,10 +10,6 @@ export const blogInputDtoValidation = (
     return [];
   }
 
-//   return result.error.issues.map((err) => ({
-//     field: err.path.join('.'), 
-//     message: err.message,
-//   }));
   const uniqueErrors = result.error.issues
     .map((err) => ({
       field: err.path.join('.'),

@@ -1,31 +1,31 @@
-import { WithId } from 'mongodb';
-import { Post } from '../../blog/validation/types/posts';
+import { Post } from '../../posts/validation/types/posts';
 import { PostInputDto } from '../../posts/dto/post.input-dto';
 import { PostQueryInput } from '../../posts/routers/input/post-query.input';
 import { LikeStatus } from '../../posts/validation/types/posts';
+import { PostDocument } from '../../posts/domain/post.schema';
 
 export interface IPostsRepository {
   findAllPosts(
     queryDto: PostQueryInput,
     userId?: string,
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }>;
+  ): Promise<{ items: PostDocument[]; totalCount: number }>;
 
   findMany(
     queryDto: PostQueryInput,
     userId?: string,
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }>;
+  ): Promise<{ items: PostDocument[]; totalCount: number }>;
 
   findPostsByBlog(
     queryDto: PostQueryInput,
     blogId: string,
     userId?: string,
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }>;
+  ): Promise<{ items: PostDocument[]; totalCount: number }>;
 
-  findById(id: string): Promise<WithId<Post> | null>;
+  findById(id: string): Promise<PostDocument | null>;
 
-  findByIdOrFail(id: string): Promise<WithId<Post>>;
+  findByIdOrFail(id: string): Promise<PostDocument>;
 
-  create(dto: PostInputDto): Promise<WithId<Post>>;
+  create(dto: PostInputDto): Promise<PostDocument>;
 
   update(
     id: string,

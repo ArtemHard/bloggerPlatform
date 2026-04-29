@@ -1,12 +1,12 @@
 import { inject, injectable } from 'inversify';
 import { IUserDB } from '../types/user.db.interface';
 import { CreateUserDto } from '../types/create-user.dto';
-import { WithId } from 'mongodb';
 import { bcryptService } from '../../../auth/adapters/bcrypt.service';
 import { TYPES } from '../../../ioc/ioc.types';
 import { IUsersRepository } from '../../repositories/types/users.repository.interface';
 import { ValidationError } from '../../../core/errors/errors.handler';
-import { User } from './user.entity';
+import { UserModel } from './user.schema';
+import { UserDocument } from './user.schema';
 
 @injectable()
 export class UsersService {
@@ -16,11 +16,11 @@ export class UsersService {
 
   async create(
     dto: CreateUserDto,
-  ): Promise<WithId<Omit<IUserDB, 'passwordHash'>>> {
+  ): Promise<Omit<IUserDB, 'passwordHash'> & { _id: string }> {
     const { login, password, email } = dto;
     const passwordHash = await bcryptService.generateHash(password);
 
-    const newUser: IUserDB = new User(login, email, passwordHash);
+    const newUser = UserModel.createUser(login, email, passwordHash);
 
     const existingUser =
       (await this.usersRepository.findByLoginOrEmail(newUser.email)) ||
@@ -36,10 +36,14 @@ export class UsersService {
       ]);
     }
 
-    const { passwordHash: passwordHashFromDb, ...newUserFromDB } =
-      await this.usersRepository.create(newUser);
+    const createdUser = await this.usersRepository.create(newUser);
 
-    return newUserFromDB;
+    // Return user without password hash but with _id as string
+    const { passwordHash: passwordHashFromDb, __v, ...userWithoutPassword } = createdUser.toObject();
+    return {
+      ...userWithoutPassword,
+      _id: createdUser._id.toString()
+    };
   }
 
   async delete(id: string): Promise<boolean> {

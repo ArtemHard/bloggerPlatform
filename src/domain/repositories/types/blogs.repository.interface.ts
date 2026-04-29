@@ -1,18 +1,18 @@
-import { WithId } from 'mongodb';
 import { Blog } from '../../blog/validation/types/blog';
 import { BlogInputDto } from '../../blog/dto/blog.input-dto';
 import { BlogQueryInput } from '../../blog/routers/input/blog-query.input';
+import { BlogDocument } from '../../blog/domain/blog.schema';
 
 export interface IBlogsRepository {
   findAllBlogs(
     queryDto: BlogQueryInput,
-  ): Promise<{ items: WithId<Blog>[]; totalCount: number }>;
+  ): Promise<{ items: BlogDocument[]; totalCount: number }>;
 
-  findById(id: string): Promise<WithId<Blog> | null>;
+  findById(id: string): Promise<BlogDocument | null>;
 
-  findByIdOrFail(id: string): Promise<WithId<Blog>>;
+  findByIdOrFail(id: string): Promise<BlogDocument>;
 
-  create(blog: BlogInputDto): Promise<WithId<Blog>>;
+  create(blog: BlogInputDto): Promise<BlogDocument>;
 
   update(blogId: string, dto: BlogInputDto): Promise<void>;
 

@@ -1,36 +1,36 @@
 import { injectable } from 'inversify';
 import { PostInputDto } from '../posts/dto/post.input-dto';
 import { Post } from '../posts/validation/types/posts';
-import { ObjectId, WithId } from 'mongodb';
-import { blogsCollection, postsCollection, usersCollection } from '../../db/mongo.db';
 import { PostQueryInput } from '../posts/routers/input/post-query.input';
 import { IPostsRepository } from './types/posts.repository.interface';
 import { LikeStatus, PostLike } from '../posts/validation/types/posts';
+import { PostModel, PostDocument } from '../posts/domain/post.schema';
+import { BlogModel } from '../blog/domain/blog.schema';
+import { UserModel } from '../users/domain/user.schema';
 
 @injectable()
 export class PostsRepository implements IPostsRepository {
   // Найти все posts
   async findAllPosts(
     queryDto: PostQueryInput,
-    userId?: string, // Добавляем параметр userId
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    userId?: string,
+  ): Promise<{ items: PostDocument[]; totalCount: number }> {
     const { pageNumber, pageSize, sortBy, sortDirection } = queryDto;
     const skip = (pageNumber - 1) * pageSize;
 
     try {
-      const items = await postsCollection
+      const items = await PostModel
         .find({})
-        .sort({ [sortBy]: sortDirection })
+        .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
         .skip(skip)
-        .limit(pageSize)
-        .toArray();
+        .limit(pageSize);
       
-      const totalCount = await postsCollection.countDocuments({});
+      const totalCount = await PostModel.countDocuments({});
       
       // Маппим посты с информацией о лайках, передавая userId
-    const mappedItems = items.map(post => this.mapPostWithLikesInfo(post, userId));
+      const mappedItems = items.map(post => this.mapPostWithLikesInfo(post, userId));
     
-    return { items: mappedItems, totalCount };
+      return { items: mappedItems, totalCount };
     } catch (error) {
       console.error('Database query error:', error);
       throw error;
@@ -39,20 +39,19 @@ export class PostsRepository implements IPostsRepository {
 
   async findMany(
     queryDto: PostQueryInput,
-    userId?: string, // Добавляем параметр userId
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    userId?: string,
+  ): Promise<{ items: PostDocument[]; totalCount: number }> {
     const { pageNumber, pageSize, sortBy, sortDirection } = queryDto;
     const filter: any = {};
     const skip = (pageNumber - 1) * pageSize;
 
     const [items, totalCount] = await Promise.all([
-      postsCollection
+      PostModel
         .find(filter)
-        .sort({ [sortBy]: sortDirection })
+        .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
         .skip(skip)
-        .limit(pageSize)
-        .toArray(),
-      postsCollection.countDocuments(filter),
+        .limit(pageSize),
+      PostModel.countDocuments(filter),
     ]);
     
     // Маппим посты с информацией о лайках, передавая userId
@@ -64,19 +63,18 @@ export class PostsRepository implements IPostsRepository {
   async findPostsByBlog(
     queryDto: PostQueryInput,
     blogId: string,
-    userId?: string, // Добавляем параметр userId
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+    userId?: string,
+  ): Promise<{ items: PostDocument[]; totalCount: number }> {
     const { pageNumber, pageSize, sortBy, sortDirection } = queryDto;
     const skip = (pageNumber - 1) * pageSize;
 
     const [items, totalCount] = await Promise.all([
-      postsCollection
+      PostModel
         .find({ blogId })
-        .sort({ [sortBy]: sortDirection })
+        .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
         .skip(skip)
-        .limit(pageSize)
-        .toArray(),
-      postsCollection.countDocuments({ blogId }),
+        .limit(pageSize),
+      PostModel.countDocuments({ blogId }),
     ]);
     
     // Маппим посты с информацией о лайках, передавая userId
@@ -85,9 +83,9 @@ export class PostsRepository implements IPostsRepository {
     return { items: mappedItems, totalCount };
   }
 
-  async findById(id: string): Promise<WithId<Post> | null> {
+  async findById(id: string): Promise<PostDocument | null> {
     try {
-      const post = await postsCollection.findOne({ _id: new ObjectId(id) });
+      const post = await PostModel.findById(id);
       if (!post) return null;
       
       // Возвращаем пост с вычисленным extendedLikesInfo
@@ -98,9 +96,9 @@ export class PostsRepository implements IPostsRepository {
   }
 
   // Метод для получения поста с информацией о лайках для конкретного пользователя
-  async findByIdWithUserInfo(id: string, userId?: string): Promise<WithId<Post> | null> {
+  async findByIdWithUserInfo(id: string, userId?: string): Promise<PostDocument | null> {
     try {
-      const post = await postsCollection.findOne({ _id: new ObjectId(id) });
+      const post = await PostModel.findById(id);
       if (!post) return null;
       
       return this.mapPostWithLikesInfo(post, userId);
@@ -109,37 +107,30 @@ export class PostsRepository implements IPostsRepository {
     }
   }
 
-  async findByIdOrFail(id: string): Promise<WithId<Post>> {
-    const res = await postsCollection.findOne({ _id: new ObjectId(id) });
+  async findByIdOrFail(id: string): Promise<PostDocument> {
+    const res = await PostModel.findById(id);
 
     if (!res) {
       throw new Error('Post not found');
-      // throw new RepositoryNotFoundError('Post not exist');
     }
     return res;
   }
 
   // Создать новый post
-  async create(dto: PostInputDto): Promise<WithId<Post>> {
-    const createdAt = new Date().toISOString();
-    const blogName =
-      (await blogsCollection.findOne({ _id: new ObjectId(dto.blogId) }))
-        ?.name || 'Unknown Blog';
+  async create(dto: PostInputDto): Promise<PostDocument> {
+    const blog = await BlogModel.findById(dto.blogId);
+    const blogName = blog?.name || 'Unknown Blog';
 
-    const newPost: Post = {
-      ...dto,
-      blogName,
-      createdAt,
-      extendedLikesInfo: {
-        likesCount: 0,
-        dislikesCount: 0,
-        myStatus: 'None',
-        newestLikes: []
-      }
-    };
-
-    const insertResult = await postsCollection.insertOne(newPost);
-    return { ...newPost, _id: insertResult.insertedId };
+    const newPost = PostModel.createPost(
+      dto.title,
+      dto.shortDescription,
+      dto.content,
+      dto.blogId,
+      blogName
+    );
+    
+    await newPost.save();
+    return newPost;
   }
 
   // Обновить post по ID
@@ -147,14 +138,13 @@ export class PostsRepository implements IPostsRepository {
     id: string,
     { title, shortDescription, content, blogId }: PostInputDto,
   ): Promise<void> {
-    const blogName =
-      (await blogsCollection.findOne({ _id: new ObjectId(blogId) }))?.name ||
-      'Unknown Blog';
+    const blog = await BlogModel.findById(blogId);
+    const blogName = blog?.name || 'Unknown Blog';
 
     const existingPost = await this.findByIdOrFail(id);
     
-    const updateResult = await postsCollection.updateOne(
-      { _id: new ObjectId(id) },
+    const updateResult = await PostModel.updateOne(
+      { _id: id },
       {
         $set: {
           title,
@@ -180,9 +170,7 @@ export class PostsRepository implements IPostsRepository {
 
   // Удалить post по ID
   async delete(id: string): Promise<void> {
-    const deleteResult = await postsCollection.deleteOne({
-      _id: new ObjectId(id),
-    });
+    const deleteResult = await PostModel.deleteOne({ _id: id });
 
     if (deleteResult.deletedCount < 1) {
       throw new Error('Post not found');
@@ -197,66 +185,46 @@ export class PostsRepository implements IPostsRepository {
       return; // Сервис уже проверил наличие поста
     }
     
-    // Получаем текущие лайки поста или создаем пустой массив
-    const currentPost = await postsCollection.findOne({ _id: new ObjectId(postId) });
-    const likes: PostLike[] = (currentPost as any).likes || [];
-    
-    // Находим существующий лайк от этого пользователя
-    const existingLikeIndex = likes.findIndex(like => like.userId === userId);
-    
-    // Получаем логин пользователя - ИСПРАВЛЕНИЕ: всегда получаем реальный логин
+    // Получаем логин пользователя
     let userLogin = `user${userId}`; // fallback
     try {
-      const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+      const user = await UserModel.findById(userId);
       if (user?.login) {
         userLogin = user.login;
       }
     } catch (error) {
-      // Если не удалось получить пользователя, используем fallback
       console.warn(`Could not find user ${userId}:`, error);
     }
     
-    if (existingLikeIndex !== -1) {
-      // Пользователь уже лайкал/дизлайкал - обновляем или удаляем
-      if (likeStatus === 'None') {
-        // Удаляем лайк
-        likes.splice(existingLikeIndex, 1);
-      } else {
-        // Обновляем статус
-        likes[existingLikeIndex] = {
-          userId,
-          likeStatus,
-          addedAt: likes[existingLikeIndex].addedAt,
-          login: userLogin
-        };
-      }
+    // Используем метод модели для обновления лайков
+    if (likeStatus !== 'None') {
+      (post as any).addLike(userId, userLogin, likeStatus);
     } else {
-      // Пользователь еще не лайкал
-      if (likeStatus !== 'None') {
-        likes.push({
-          userId,
-          likeStatus,
-          addedAt: new Date().toISOString(),
-          login: userLogin
-        });
-      }
+      // Удаляем лайк пользователя
+      post.likes = (post.likes || []).filter((like: PostLike) => like.userId !== userId);
+      
+      // Пересчитываем счетчики
+      const likesCount = post.likes.filter((like: PostLike) => like.likeStatus === 'Like').length;
+      const dislikesCount = post.likes.filter((like: PostLike) => like.likeStatus === 'Dislike').length;
+      
+      post.extendedLikesInfo.likesCount = likesCount;
+      post.extendedLikesInfo.dislikesCount = dislikesCount;
+      
+      // Обновляем newest likes
+      const newestLikes = post.likes
+        .filter((like: PostLike) => like.likeStatus === 'Like')
+        .sort((a: PostLike, b: PostLike) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime())
+        .slice(0, 3);
+      
+      post.extendedLikesInfo.newestLikes = newestLikes;
     }
     
-    // Обновляем в базе
-    try {
-      await postsCollection.updateOne(
-        { _id: new ObjectId(postId) },
-        { $set: { likes } }
-      );
-    } catch (error) {
-      // Если невалидный ObjectId, просто выходим
-      return;
-    }
+    await post.save();
   }
 
   // Private method for mapping posts with likes info
-  private mapPostWithLikesInfo(post: WithId<Post>, currentUserId?: string): WithId<Post> {
-    const likes: PostLike[] = (post as any).likes || [];
+  private mapPostWithLikesInfo(post: PostDocument, currentUserId?: string): PostDocument {
+    const likes: PostLike[] = post.likes || [];
     
     // Calculate counters
     const likesCount = likes.filter(like => like.likeStatus === 'Like').length;
@@ -282,14 +250,14 @@ export class PostsRepository implements IPostsRepository {
         login: like.login
       }));
     
-    return {
-      ...post,
-      extendedLikesInfo: {
-        likesCount,
-        dislikesCount,
-        myStatus,
-        newestLikes
-      }
+    // Update extendedLikesInfo on the document
+    post.extendedLikesInfo = {
+      likesCount,
+      dislikesCount,
+      myStatus,
+      newestLikes
     };
+    
+    return post;
   }
 }

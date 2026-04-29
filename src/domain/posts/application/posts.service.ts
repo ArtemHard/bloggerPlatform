@@ -47,11 +47,15 @@ export class PostsService {
     return this.postsRepository.findByIdOrFail(id);
   }
 
-  async updatePostLikeStatus(postId: string, userId: string, likeStatus: LikeStatus): Promise<PromiseResult<null>> {
+  async updatePostLikeStatus(
+    postId: string,
+    userId: string,
+    likeStatus: LikeStatus,
+  ): Promise<PromiseResult<null>> {
     try {
       // Проверяем наличие поста
       const post = await this.postsRepository.findById(postId);
-      
+
       if (!post) {
         return {
           status: ResultStatus.NotFound,
@@ -60,8 +64,12 @@ export class PostsService {
         };
       }
 
-      await this.postsRepository.updatePostLikeStatus(postId, userId, likeStatus);
-      
+      await this.postsRepository.updatePostLikeStatus(
+        postId,
+        userId,
+        likeStatus,
+      );
+
       return {
         status: ResultStatus.Success,
         data: null,
@@ -75,56 +83,4 @@ export class PostsService {
       };
     }
   }
-
-  // async create(dto: RideAttributes): Promise<string> {
-  //   const driver = await driversRepository.findByIdOrFail(dto.driverId);
-
-  //   // Если у водителя сейчас есть заказ, то создать новую поездку нельзя
-  //   const activeRide = await ridesRepository.findActiveRideByDriverId(
-  //     dto.driverId,
-  //   );
-
-  //   if (activeRide) {
-  //     throw new DomainError(
-  //       `Driver has an active ride. Complete or cancel the ride first`,
-  //       DriverErrorCode.HasActiveRide,
-  //     );
-  //   }
-
-  //   const newRide: Ride = {
-  //     clientName: dto.clientName,
-  //     driver: {
-  //       id: dto.driverId,
-  //       name: driver.name,
-  //     },
-  //     vehicle: {
-  //       licensePlate: driver.vehicle.licensePlate,
-  //       name: `${driver.vehicle.make} ${driver.vehicle.model}`,
-  //     },
-  //     price: dto.price,
-  //     currency: dto.currency,
-  //     createdAt: new Date(),
-  //     updatedAt: new Date(),
-  //     startedAt: new Date(),
-  //     finishedAt: null,
-  //     addresses: {
-  //       from: dto.fromAddress,
-  //       to: dto.toAddress,
-  //     },
-  //   };
-
-  //   return await ridesRepository.createRide(newRide);
-  // },
-
-  // async finishRide(id: string) {
-  //   const ride = await ridesRepository.findByIdOrFail(id);
-
-  //   if (ride.finishedAt) {
-  //     throw new DomainError(
-  //       `Ride is already finished at ${ride.finishedAt}`,
-  //       RideErrorCode.AlreadyFinished,
-  //     );
-  //   }
-  //   await ridesRepository.finishRide(id, new Date());
-  // },
-};
+}

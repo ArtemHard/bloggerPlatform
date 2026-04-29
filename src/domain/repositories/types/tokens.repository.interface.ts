@@ -1,19 +1,9 @@
-import { ObjectId } from 'mongodb';
-
-export interface IRefreshTokenDB {
-  _id?: ObjectId;
-  userId: string;
-  token: string;
-  createdAt: Date;
-  expiresAt: Date;
-  isRevoked: boolean;
-  deviceId?: string;
-}
+import { TokenDocument, IRefreshTokenDB } from '../../../auth/domain/token.schema';
 
 export interface ITokensRepository {
-  create(tokenData: Omit<IRefreshTokenDB, '_id'>): Promise<ObjectId>;
+  create(tokenData: Omit<IRefreshTokenDB, '_id'>): Promise<string>;
 
-  findByToken(token: string): Promise<IRefreshTokenDB | null>;
+  findByToken(token: string): Promise<TokenDocument | null>;
 
   revokeToken(token: string): Promise<boolean>;
 

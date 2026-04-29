@@ -11,9 +11,11 @@ import { LikeStatus } from '../enums/like-status.enum';
 
 @injectable()
 export class CommentsService {
-  @inject(TYPES.CommentsRepository) private commentsRepository!: ICommentsRepository;
+  @inject(TYPES.CommentsRepository)
+  private commentsRepository!: ICommentsRepository;
   @inject(TYPES.PostsRepository) private postsRepository!: IPostsRepository;
-  @inject(TYPES.UsersQueryRepository) private usersQwRepository!: IUsersQueryRepository;
+  @inject(TYPES.UsersQueryRepository)
+  private usersQwRepository!: IUsersQueryRepository;
 
   constructor() {}
 
@@ -106,14 +108,19 @@ export class CommentsService {
     if (post && resultUser) {
       const { id, login } = resultUser;
 
-      const comment = await this.commentsRepository.create({
-        postId,
-        content,
-        commentatorInfo: {
-          userId: id,
-          userLogin: login,
+      const comment = await this.commentsRepository.create(
+        {
+          content,
+          postId,
+          commentatorInfo: {
+            userId: id,
+            userLogin: login,
+          },
         },
-      });
+        id,
+        login,
+        postId,
+      );
 
       return {
         status: ResultStatus.Success,
@@ -150,7 +157,11 @@ export class CommentsService {
       };
     }
 
-    await this.commentsRepository.updateLikeStatus(commentId, userId, likeStatus);
+    await this.commentsRepository.updateLikeStatus(
+      commentId,
+      userId,
+      likeStatus,
+    );
 
     return {
       status: ResultStatus.Success,
@@ -158,85 +169,4 @@ export class CommentsService {
       extensions: [],
     };
   }
-  // async findMany(
-  //   queryDto: PostQueryInput,
-  // ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
-  //   //TODO вернуть пагинацию
-  //   return commentsRepository.findMany(queryDto);
-  // },
-
-  // async findPostsByBlog(
-  //   queryDto: PostQueryInput,
-  //   blogId: string,
-  // ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
-  //   await blogsRepository.findByIdOrFail(blogId);
-
-  //   return postsRepository.findPostsByBlog(queryDto, blogId);
-  // },
-
-  // async createPostByBlog(
-  //   dto: Omit<PostInputDto, 'blogId'>,
-  //   blogId: string,
-  // ): Promise<WithId<Post>> {
-
-  //   await blogsRepository.findByIdOrFail(blogId);
-
-  //   return postsRepository.create({ ...dto, blogId });
-  // },
-
-  // async findByIdOrFail(id: string): Promise<WithId<Post>> {
-  //   return postsRepository.findByIdOrFail(id);
-  // },
-
-  // async create(dto: RideAttributes): Promise<string> {
-  //   const driver = await driversRepository.findByIdOrFail(dto.driverId);
-
-  //   // Если у водителя сейчас есть заказ, то создать новую поездку нельзя
-  //   const activeRide = await ridesRepository.findActiveRideByDriverId(
-  //     dto.driverId,
-  //   );
-
-  //   if (activeRide) {
-  //     throw new DomainError(
-  //       `Driver has an active ride. Complete or cancel the ride first`,
-  //       DriverErrorCode.HasActiveRide,
-  //     );
-  //   }
-
-  //   const newRide: Ride = {
-  //     clientName: dto.clientName,
-  //     driver: {
-  //       id: dto.driverId,
-  //       name: driver.name,
-  //     },
-  //     vehicle: {
-  //       licensePlate: driver.vehicle.licensePlate,
-  //       name: `${driver.vehicle.make} ${driver.vehicle.model}`,
-  //     },
-  //     price: dto.price,
-  //     currency: dto.currency,
-  //     createdAt: new Date(),
-  //     updatedAt: new Date(),
-  //     startedAt: new Date(),
-  //     finishedAt: null,
-  //     addresses: {
-  //       from: dto.fromAddress,
-  //       to: dto.toAddress,
-  //     },
-  //   };
-
-  //   return await ridesRepository.createRide(newRide);
-  // },
-
-  // async finishRide(id: string) {
-  //   const ride = await ridesRepository.findByIdOrFail(id);
-
-  //   if (ride.finishedAt) {
-  //     throw new DomainError(
-  //       `Ride is already finished at ${ride.finishedAt}`,
-  //       RideErrorCode.AlreadyFinished,
-  //     );
-  //   }
-  //   await ridesRepository.finishRide(id, new Date());
-  // },
-};
+}

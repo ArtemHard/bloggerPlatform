@@ -1,4 +1,3 @@
-import { WithId } from 'mongodb';
 import { inject, injectable } from 'inversify';
 import { QueryParams } from '../../../core/utils/query-parser.util';
 import { IPagination } from '../../../core/types/pagination';
@@ -11,7 +10,7 @@ import { CommentViewModel } from '../routers/output/comment.view.model';
 import { mapToCommentViewModel } from '../routers/handlers/mappers/map-to-comment-view-model';
 import { PromiseResult } from '../../../common/result/result.type';
 import { ResultStatus } from '../../../common/result/resultCode';
-import { commentsCollection } from '../../../db/mongo.db';
+import { CommentModel, CommentDocument } from '../domain/comment.schema';
 
 @injectable()
 export class CommentsQueryRepository implements ICommentsQueryRepository {
@@ -44,13 +43,12 @@ export class CommentsQueryRepository implements ICommentsQueryRepository {
     const filter = { postId };
 
     const [comments, totalCount] = await Promise.all([
-      commentsCollection
+      CommentModel
         .find(filter)
         .sort({ [sortBy]: sortDirection })
         .skip(skip)
-        .limit(pageSize)
-        .toArray(),
-      commentsCollection.countDocuments(filter)
+        .limit(pageSize),
+      CommentModel.countDocuments(filter)
     ]);
 
     return {
@@ -61,7 +59,7 @@ export class CommentsQueryRepository implements ICommentsQueryRepository {
         page: pageNumber,
         pageSize: pageSize,
         totalCount,
-        items: comments.map((c) => this._getInView(c, currentUserId)),
+        items: comments.map((c: CommentDocument) => this._getInView(c, currentUserId)),
       },
     };
   }
@@ -72,7 +70,7 @@ export class CommentsQueryRepository implements ICommentsQueryRepository {
     return result ? this._getInView(result, currentUserId) : null;
   }
 
-  private _getInView(comment: WithId<CommentType>, currentUserId?: string): CommentViewModel {
+  private _getInView(comment: CommentDocument, currentUserId?: string): CommentViewModel {
     return mapToCommentViewModel(comment, currentUserId);
   }
 }

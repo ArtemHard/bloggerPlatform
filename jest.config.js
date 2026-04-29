@@ -13,4 +13,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  // Добавляем последовательное выполнение тестов для избежания конфликтов в базе данных
+  maxWorkers: 1,
+  testTimeout: 30000,
 };

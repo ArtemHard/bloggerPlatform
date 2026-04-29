@@ -1,18 +1,18 @@
-import { WithId } from 'mongodb';
 import { IUserDB } from '../../users/types/user.db.interface';
+import { UserDocument } from '../../users/domain/user.schema';
 
 export interface IUsersRepository {
-  create(user: IUserDB): Promise<WithId<IUserDB>>;
+  create(user: IUserDB): Promise<UserDocument>;
 
   delete(id: string): Promise<boolean>;
 
-  findById(id: string): Promise<WithId<IUserDB> | null>;
+  findById(id: string): Promise<UserDocument | null>;
 
-  findByLoginOrEmail(loginOrEmail: string): Promise<WithId<IUserDB> | null>;
+  findByLoginOrEmail(loginOrEmail: string): Promise<UserDocument | null>;
 
-  doesExistByLoginOrEmail(login: string, email: string): Promise<WithId<IUserDB> | null>;
+  doesExistByLoginOrEmail(login: string, email: string): Promise<UserDocument | null>;
 
-  getUserByConfirmEmailCode(code: string): Promise<WithId<IUserDB> | null>;
+  getUserByConfirmEmailCode(code: string): Promise<UserDocument | null>;
 
   confirmEmail(id: string): Promise<boolean>;
 
@@ -26,7 +26,7 @@ export interface IUsersRepository {
     expirationDate: Date;
   }): Promise<boolean>;
 
-  getUserByRecoveryCode(code: string): Promise<WithId<IUserDB> | null>;
+  getUserByRecoveryCode(code: string): Promise<UserDocument | null>;
 
   updatePasswordRecovery({
     id,

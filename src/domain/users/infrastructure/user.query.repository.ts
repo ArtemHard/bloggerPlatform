@@ -1,13 +1,12 @@
 import { injectable } from 'inversify';
-import { ObjectId, WithId } from 'mongodb';
 import {
   QueryParams,
 } from '../../../core/utils/query-parser.util';
 import { IPagination } from '../../../core/types/pagination';
 import { IUserView } from '../types/user.view.interface';
-import { usersCollection } from '../../../db/mongo.db';
 import { IUserDB } from '../types/user.db.interface';
 import { IUsersQueryRepository } from '../../repositories/types/users-query.repository.interface';
+import { UserModel, UserDocument } from '../domain/user.schema';
 
 @injectable()
 export class UsersQueryRepository implements IUsersQueryRepository {
@@ -42,15 +41,13 @@ export class UsersQueryRepository implements IUsersQueryRepository {
       loginAndEmailFilter.$or = orConditions;
     }
 
-    const totalCount =
-      await usersCollection.countDocuments(loginAndEmailFilter);
+    const totalCount = await UserModel.countDocuments(loginAndEmailFilter);
 
-    const users = await usersCollection
+    const users = await UserModel
       .find(loginAndEmailFilter)
       .sort({ [sortBy]: sortDirection })
       .skip(skip)
-      .limit(pageSize)
-      .toArray();
+      .limit(pageSize);
 
     return {
       pagesCount: Math.ceil(totalCount / pageSize),
@@ -62,11 +59,11 @@ export class UsersQueryRepository implements IUsersQueryRepository {
   }
 
   async findById(id: string): Promise<IUserView | null> {
-    const user = await usersCollection.findOne({ _id: new ObjectId(id) });
+    const user = await UserModel.findById(id);
     return user ? this._getInView(user) : null;
   }
 
-  private _getInView(user: WithId<IUserDB>): IUserView {
+  private _getInView(user: UserDocument): IUserView {
     return {
       id: user._id.toString(),
       login: user.login,

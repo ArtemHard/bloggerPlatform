@@ -13,9 +13,9 @@ export const parseQueryParams = (query: {
   sortBy?: any;
   sortDirection?: any;
 }): QueryParams => {
-  const pageNumber = Math.max(parseInt(query.pageNumber, 10) || 1, 1);
+  const pageNumber = Math.max(parseInt(query.pageNumber) || 1, 1);
   const pageSize = Math.min(
-    Math.max(parseInt(query.pageSize, 10) || 10, 1),
+    Math.max(parseInt(query.pageSize) || 10, 1),
     100,
   ); // ограничим макс. 100
   const sortBy = typeof query.sortBy === 'string' ? query.sortBy : 'createdAt';
