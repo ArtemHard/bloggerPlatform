@@ -1,5 +1,5 @@
 import { WithId } from 'mongodb';
-import { Post } from '../../../../blog/validation/types/posts';
+import { Post } from '../../../validation/types/posts';
 
 export const mapToPostViewModel = (post: WithId<Post>) => {
   return {
@@ -9,6 +9,12 @@ export const mapToPostViewModel = (post: WithId<Post>) => {
     content: post.content,
     blogId: post.blogId,
     blogName: post.blogName,
-    createdAt: post.createdAt
+    createdAt: post.createdAt,
+    extendedLikesInfo: post.extendedLikesInfo || {
+      likesCount: 0,
+      dislikesCount: 0,
+      myStatus: 'None',
+      newestLikes: []
+    }
   };
 };

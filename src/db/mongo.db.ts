@@ -2,7 +2,7 @@ import { Collection, Db, MongoClient, MongoClientOptions } from 'mongodb';
 import { attachDatabasePool } from '@vercel/functions';
 import { SETTINGS } from '../core/settings/settings';
 import { Blog } from '../domain/blog/validation/types/blog';
-import { Post } from '../domain/blog/validation/types/posts';
+import { Post } from '../domain/posts/validation/types/posts';
 import { IUserDB } from '../domain/users/types/user.db.interface';
 import { ICommentDB } from '../domain/comments/types/comment.db.interface';
 import { IRefreshTokenDB } from '../auth/infrastructure/token.repository';

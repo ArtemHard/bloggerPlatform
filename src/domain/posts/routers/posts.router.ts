@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getAllPostsHandler } from './handlers/get-all-posts.handler';
 import { createPostHandler } from './handlers/create-post.handler';
-import { idValidation } from '../../../core/middlewars/validatinos';
+import { idValidation, postIdValidation } from '../../../core/middlewars/validatinos';
 import { inputValidationResultMiddleware } from '../../../core/middlewars/input-validtion-result.middleware';
 import { getPostHandler } from './handlers/get-post.handler';
 import { updatePostHandler } from './handlers/update-post.handler';
@@ -14,13 +14,24 @@ import { accessTokenGuard } from '../../../auth/api/guards/access.token.guard';
 import { optionalAccessTokenGuard } from '../../../auth/api/guards/optional.access.token.guard';
 import { getAllCommentsByPostHandler } from './handlers/get-all-comments-by-post.handler';
 import { CommentsSortField } from './input/comments-sort-field';
+import { updatePostLikeStatusHandler } from './handlers/update-post-like-status.handler';
+import { likeStatusValidation } from '../validation/like-status.validation';
 
 export const postsRouter = Router({});
 
 postsRouter
-  .get('', paginationAndSortingValidation(PostSortField), getAllPostsHandler)
-  .get('/:id', idValidation, inputValidationResultMiddleware, getPostHandler)
+  .get('', paginationAndSortingValidation(PostSortField), optionalAccessTokenGuard, getAllPostsHandler)
   .post('', superAdminGuardMiddleware, createPostHandler)
+  // update post like status - должен быть раньше маршрутов с :id
+  .put(
+    '/:postId/like-status',
+    postIdValidation,
+    likeStatusValidation,
+    accessTokenGuard,
+    inputValidationResultMiddleware,
+    updatePostLikeStatusHandler,
+  )
+  .get('/:id', idValidation, optionalAccessTokenGuard, inputValidationResultMiddleware, getPostHandler)
   .put(
     '/:id',
     superAdminGuardMiddleware,

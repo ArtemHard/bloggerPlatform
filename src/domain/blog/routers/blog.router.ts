@@ -14,6 +14,7 @@ import { getBlogPostsListHandler } from './handlers/get-blog-posts-list.handler'
 import { createBlogPostHandler } from './handlers/create-blog-post-handler';
 import { BlogSortField } from './input/blog-sort-field';
 import { baseAuthGuard } from '../../../auth/api/guards/base.auth.guard';
+import { optionalAccessTokenGuard } from '../../../auth/api/guards/optional.access.token.guard';
 
 export const blogRouter = Router({});
 
@@ -44,9 +45,9 @@ blogRouter
   .get(
     '/:id/posts',
     idValidation,
+    optionalAccessTokenGuard,
     paginationAndSortingValidation(PostSortField),
     inputValidationResultMiddleware,
-    //@ts-expect-error  уже используете paginationAndSortingValidation перед хэндлером, и он гарантированно парсит поля в числа
     getBlogPostsListHandler,
   )
   .post(

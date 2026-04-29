@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express, { Express } from "express";
 import { BLOGS_PATH, POSTS_PATH, TESTING_PATH, USERS_PATH, AUTH_PATH, COMMENTS_PATH, SECURITY_PATH } from "./core/paths/paths";
 import { blogRouter } from "./domain/blog/routers/blog.router";
@@ -8,12 +9,16 @@ import { authRouter } from "./auth/api/auth.router";
 import { securityRouter } from "./auth/api/security.router";
 import { commentsRouter } from "./domain/comments/routers/comments.router";
 
+const startedAt = new Date();
+
 export const setupApp = (app: Express) => {
   app.use(express.json()); // middleware для парсинга JSON в теле запроса
 
   // основной роут
   app.get("/", (req, res) => {
-    res.status(200).send("Hello world!");
+    res.send(`Server started at: ${startedAt.toLocaleString("ru-RU", {
+    timeZone: "Europe/Moscow"
+  })}`);
   });
 
   app.use(BLOGS_PATH, blogRouter);
