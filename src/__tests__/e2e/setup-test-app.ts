@@ -10,7 +10,7 @@ import { securityRouter } from "../../auth/api/security.router";
 import { commentsRouter } from "../../domain/comments/routers/comments.router";
 
 // Mock rate limiting middleware for tests
-export const mockRateLimitMiddleware = async (req: any, res: any, next: any) => {
+export const mockRateLimitMiddleware = async (_: any, __: any, next: any) => {
   // In tests, we bypass rate limiting completely
   next();
 };
@@ -19,7 +19,7 @@ export const setupTestApp = (app: Express) => {
   app.use(express.json());
 
   // основной роут
-  app.get("/", (req, res) => {
+  app.get("/", (_, res) => {
     res.status(200).send("Hello world 123!");
   });
 

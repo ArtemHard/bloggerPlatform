@@ -5,7 +5,6 @@ import { ObjectId, WithId } from 'mongodb';
 import { blogsCollection } from '../../db/mongo.db';
 import { RepositoryNotFoundError } from '../../core/errors/repository-not-found.error';
 import { BlogQueryInput } from '../blog/routers/input/blog-query.input';
-import { parseQueryParams } from '../../core/utils/query-parser.util';
 import { findPaginated } from '../../core/utils/pagination.util';
 import { IBlogsRepository } from './types/blogs.repository.interface';
 
@@ -15,8 +14,6 @@ export class BlogsRepository implements IBlogsRepository {
   async findAllBlogs(
     queryDto: BlogQueryInput,
   ): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
-    const { pageNumber, pageSize, sortBy, sortDirection, skip } =
-      parseQueryParams(queryDto);
     const { searchNameTerm } = queryDto;
 
     const filter: Record<string, unknown> = {};

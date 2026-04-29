@@ -4,7 +4,6 @@ import { TYPES } from '../../../../ioc/ioc.types';
 import { PostsService } from '../../application/posts.service';
 import { LikeInputModel } from '../../types/posts';
 import { ResultStatus } from '../../../../common/result/resultCode';
-import { log } from 'console';
 
 const postsService = container.get<PostsService>(TYPES.PostsService);
 

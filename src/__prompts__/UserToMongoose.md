@@ -6,7 +6,7 @@
 
 ## Нужно:
 
-определить Mongoose-схему для User на основе интерфейса из src/domain/users/types/user.db.interface.ts;
+определить Mongoose-схему для моделей на основе уже существующих интерфейсов.
 
 заменить существующую работу с user на корректные операции через Mongoose;
 
@@ -34,6 +34,33 @@ user.wallets = [
 }
 
 await this.userRepository.save(user);
+// Пример 2:
+import { BlogType } from '../routes/blogs-router'
+import { BlogModel } from '../mongo/blog/blog.model'
+
+export const BlogsRepository = {
+async getBlogs(): Promise<BlogType[]> {
+return BlogModel.find({},{\_id: 0 })
+},
+
+    async getBlogById(id: string): Promise<BlogType | null> {
+        return BlogModel.findOne({ id },{ _id: 0 })
+    },
+
+    async updateBlog(
+        id: string,
+        body: {name: 'string',description: 'string'}
+    ): Promise<boolean> {
+        const res = await BlogModel.updateOne({ id }, body)
+        return res.matchedCount === 1
+    },
+
+    async deleteBlog(id: string): Promise<boolean> {
+        const res = await BlogModel.deleteOne({ id })
+        return res.deletedCount === 1
+    },
+
+}
 
 ## Контекст
 
@@ -54,5 +81,3 @@ npm run dev
 Типизация без ошибок.
 Приложение запускается через npm run dev.
 Изменения соответствуют rules.md.
-
-<!-- реализация DDD с доменной сущностью user -->

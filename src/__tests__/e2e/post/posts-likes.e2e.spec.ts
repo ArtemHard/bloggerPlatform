@@ -9,7 +9,7 @@ import { clearDb } from '../../../core/utils/clear-db';
 
 // Mock rate limiting middleware to bypass rate limiting in tests
 jest.mock('../../../core/middlewars/rate-limit.middleware', () => ({
-  rateLimitMiddleware: async (req: any, res: any, next: any) => {
+  rateLimitMiddleware: async (_: any, __: any, next: any) => {
     next();
   },
 }));
@@ -140,14 +140,12 @@ describe('Posts Likes API', () => {
       .expect(HttpStatus.NoContent);
 
     // dislike post 3 by user 1
-    console.log('Disliking post 3 by user 1...');
     await userAuth(userTokens[0])
       .put(`${POSTS_PATH}/${postIds[2]}/like-status`)
       .send({ likeStatus: 'Dislike' })
       .expect(HttpStatus.NoContent);
 
     // like post 4 by user 1, user 4, user 2, user 3
-    console.log('Liking post 4 by users 1, 4, 2, 3...');
     await userAuth(userTokens[0])
       .put(`${POSTS_PATH}/${postIds[3]}/like-status`)
       .send({ likeStatus: 'Like' })
@@ -169,7 +167,6 @@ describe('Posts Likes API', () => {
       .expect(HttpStatus.NoContent);
 
     // like post 5 by user 2, dislike by user 3
-    console.log('Liking post 5 by user 2, disliking by user 3...');
     await userAuth(userTokens[1])
       .put(`${POSTS_PATH}/${postIds[4]}/like-status`)
       .send({ likeStatus: 'Like' })
@@ -181,7 +178,6 @@ describe('Posts Likes API', () => {
       .expect(HttpStatus.NoContent);
 
     // like post 6 by user 1, dislike by user 2
-    console.log('Liking post 6 by user 1, disliking by user 2...');
     await userAuth(userTokens[0])
       .put(`${POSTS_PATH}/${postIds[5]}/like-status`)
       .send({ likeStatus: 'Like' })
@@ -214,7 +210,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 1 (2 likes)
     const post1 = response.body.items.find((item: any) => item.id === postIds[0]);
-    console.log('Post 1 verification:', post1);
     expect(post1).toBeDefined();
     expect(post1.extendedLikesInfo.likesCount).toBe(2);
     expect(post1.extendedLikesInfo.dislikesCount).toBe(0);
@@ -223,7 +218,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 2 (2 likes)
     const post2 = response.body.items.find((item: any) => item.id === postIds[1]);
-    console.log('Post 2 verification:', post2);
     expect(post2).toBeDefined();
     expect(post2.extendedLikesInfo.likesCount).toBe(2);
     expect(post2.extendedLikesInfo.dislikesCount).toBe(0);
@@ -232,7 +226,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 3 (1 dislike)
     const post3 = response.body.items.find((item: any) => item.id === postIds[2]);
-    console.log('Post 3 verification:', post3);
     expect(post3).toBeDefined();
     expect(post3.extendedLikesInfo.likesCount).toBe(0);
     expect(post3.extendedLikesInfo.dislikesCount).toBe(1);
@@ -241,7 +234,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 4 (4 likes)
     const post4 = response.body.items.find((item: any) => item.id === postIds[3]);
-    console.log('Post 4 verification:', post4);
     expect(post4).toBeDefined();
     expect(post4.extendedLikesInfo.likesCount).toBe(4);
     expect(post4.extendedLikesInfo.dislikesCount).toBe(0);
@@ -258,7 +250,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 5 (1 like, 1 dislike)
     const post5 = response.body.items.find((item: any) => item.id === postIds[4]);
-    console.log('Post 5 verification:', post5);
     expect(post5).toBeDefined();
     expect(post5.extendedLikesInfo.likesCount).toBe(1);
     expect(post5.extendedLikesInfo.dislikesCount).toBe(1);
@@ -267,7 +258,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 6 (1 like, 1 dislike)
     const post6 = response.body.items.find((item: any) => item.id === postIds[5]);
-    console.log('Post 6 verification:', post6);
     expect(post6).toBeDefined();
     expect(post6.extendedLikesInfo.likesCount).toBe(1);
     expect(post6.extendedLikesInfo.dislikesCount).toBe(1);
@@ -302,14 +292,12 @@ describe('Posts Likes API', () => {
       .expect(HttpStatus.NoContent);
 
     // dislike post 3 by user 1
-    console.log('Disliking post 3 by user 1...');
     await userAuth(userTokens[0])
       .put(`${POSTS_PATH}/${postIds[2]}/like-status`)
       .send({ likeStatus: 'Dislike' })
       .expect(HttpStatus.NoContent);
 
     // like post 4 by user 1, user 4, user 2, user 3
-    console.log('Liking post 4 by users 1, 4, 2, 3...');
     await userAuth(userTokens[0])
       .put(`${POSTS_PATH}/${postIds[3]}/like-status`)
       .send({ likeStatus: 'Like' })
@@ -331,7 +319,6 @@ describe('Posts Likes API', () => {
       .expect(HttpStatus.NoContent);
 
     // like post 5 by user 2, dislike by user 3
-    console.log('Liking post 5 by user 2, disliking by user 3...');
     await userAuth(userTokens[1])
       .put(`${POSTS_PATH}/${postIds[4]}/like-status`)
       .send({ likeStatus: 'Like' })
@@ -343,7 +330,6 @@ describe('Posts Likes API', () => {
       .expect(HttpStatus.NoContent);
 
     // like post 6 by user 1, dislike by user 2
-    console.log('Liking post 6 by user 1, disliking by user 2...');
     await userAuth(userTokens[0])
       .put(`${POSTS_PATH}/${postIds[5]}/like-status`)
       .send({ likeStatus: 'Like' })
@@ -373,7 +359,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 1 (2 likes)
     const post1 = response.body.items.find((item: any) => item.id === postIds[0]);
-    console.log('Post 1 verification:', post1);
     expect(post1).toBeDefined();
     expect(post1.extendedLikesInfo.likesCount).toBe(2);
     expect(post1.extendedLikesInfo.dislikesCount).toBe(0);
@@ -382,7 +367,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 2 (2 likes)
     const post2 = response.body.items.find((item: any) => item.id === postIds[1]);
-    console.log('Post 2 verification:', post2);
     expect(post2).toBeDefined();
     expect(post2.extendedLikesInfo.likesCount).toBe(2);
     expect(post2.extendedLikesInfo.dislikesCount).toBe(0);
@@ -391,7 +375,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 3 (1 dislike)
     const post3 = response.body.items.find((item: any) => item.id === postIds[2]);
-    console.log('Post 3 verification:', post3);
     expect(post3).toBeDefined();
     expect(post3.extendedLikesInfo.likesCount).toBe(0);
     expect(post3.extendedLikesInfo.dislikesCount).toBe(1);
@@ -400,7 +383,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 4 (4 likes)
     const post4 = response.body.items.find((item: any) => item.id === postIds[3]);
-    console.log('Post 4 verification:', post4);
     expect(post4).toBeDefined();
     expect(post4.extendedLikesInfo.likesCount).toBe(4);
     expect(post4.extendedLikesInfo.dislikesCount).toBe(0);
@@ -417,7 +399,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 5 (1 like, 1 dislike)
     const post5 = response.body.items.find((item: any) => item.id === postIds[4]);
-    console.log('Post 5 verification:', post5);
     expect(post5).toBeDefined();
     expect(post5.extendedLikesInfo.likesCount).toBe(1);
     expect(post5.extendedLikesInfo.dislikesCount).toBe(1);
@@ -426,7 +407,6 @@ describe('Posts Likes API', () => {
 
     // Verify post 6 (1 like, 1 dislike)
     const post6 = response.body.items.find((item: any) => item.id === postIds[5]);
-    console.log('Post 6 verification:', post6);
     expect(post6).toBeDefined();
     expect(post6.extendedLikesInfo.likesCount).toBe(1);
     expect(post6.extendedLikesInfo.dislikesCount).toBe(1);

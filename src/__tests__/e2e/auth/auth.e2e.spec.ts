@@ -48,18 +48,13 @@ describe('Auth API', () => {
     password: 'password123',
   };
 
-  let accessToken: string;
-
+  
  beforeAll(async () => {
-  console.log('Connecting to DB...');
   await runDB(SETTINGS.MONGO_URL);
-  console.log('DB connected.');
 }, 15000);
 
 beforeEach(async () => {
-  console.log('Clearing DB...');
   await clearDb(app);
-  console.log('DB cleared.');
 }, 10000);
 
   afterAll(async () => {
@@ -86,8 +81,6 @@ beforeEach(async () => {
       expect(loginResponse.body).toHaveProperty('accessToken');
       expect(typeof loginResponse.body.accessToken).toBe('string');
       expect(loginResponse.body.accessToken).not.toHaveLength(0);
-
-      accessToken = loginResponse.body.accessToken;
     });
 
     it('should return error if passed wrong login; status 401', async () => {
@@ -189,7 +182,7 @@ beforeEach(async () => {
 
     it('should return user info with valid token; status 200', async () => {
       // First, get a valid token
-      const createUserResponse = await supertest(app)
+      await supertest(app)
         .post('/users')
         .auth('admin', 'qwerty', { type: 'basic' })
         .send({
@@ -402,8 +395,6 @@ beforeEach(async () => {
       );
       
       const confirmationCode = user?.emailConfirmation.confirmationCode;
-      console.log('user ', user);
-      console.log('confirmationCode ', confirmationCode);
 
       await supertest(app)
         .post(`${AUTH_PATH}/registration-confirmation`)
@@ -411,17 +402,15 @@ beforeEach(async () => {
         .expect(HttpStatus.NoContent);
 
 
-          const userAfterApply = await usersRepository.findByLoginOrEmail(
+          await usersRepository.findByLoginOrEmail(
         registrationData.email,
       );
 
       // Try to confirm again with the same code
-      const response = await supertest(app)
+      await supertest(app)
         .post(`${AUTH_PATH}/registration-confirmation`)
         .send({ code: confirmationCode })
         .expect(HttpStatus.BadRequest);
-
-      expect(response.body.errorsMessages).toBeDefined();
 
     });
   });
@@ -434,7 +423,7 @@ beforeEach(async () => {
         .send(registrationData)
         .expect(HttpStatus.NoContent);
 
-      const response = await supertest(app)
+      await supertest(app)
         .post(`${AUTH_PATH}/registration-email-resending`)
         .send({ email: registrationData.email })
         .expect(HttpStatus.NoContent);

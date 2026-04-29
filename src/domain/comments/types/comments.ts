@@ -1,4 +1,3 @@
-import { ObjectId } from 'mongodb';
 import { PaginatedOutput } from '../../../core/types/paginated.output';
 import { LikeStatus } from '../enums/like-status.enum';
 

@@ -1,4 +1,3 @@
-import { PostSortField } from '../../domain/posts/routers/input/post-sort-field';
 
 export type QueryParams = {
   pageNumber: number;

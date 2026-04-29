@@ -1,7 +1,3 @@
-import { WithId } from 'mongodb';
-import { Post } from '../../validation/types/posts';
-import { PostListPaginatedOutput } from '../output/post-list-paginated-output';
-import { mapToPostViewModel } from '../../../posts/routers/handlers/mappers/map-to-post-view-model';
 import { CommentViewModel } from '../../../comments/types';
 import { CommentListPaginatedOutput } from '../../../comments/types';
 

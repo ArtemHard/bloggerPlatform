@@ -7,16 +7,12 @@ export const jwtService = {
       expiresIn: process.env.AC_TIME ? parseInt(process.env.AC_TIME, 10) : 10,
     });
 
-    const payload = jwt.decode(token);
-
     return token;
   },
   async createRefreshToken(userId: string, deviceId: string): Promise<string> {
     const token = jwt.sign({ userId, deviceId }, appConfig.RT_SECRET, {
       expiresIn: process.env.RT_TIME ? parseInt(process.env.RT_TIME, 10) : 20,
     });
-
-    const payload = jwt.decode(token);
 
     return token;
   },

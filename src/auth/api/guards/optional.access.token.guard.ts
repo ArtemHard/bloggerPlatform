@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { jwtService } from '../../adapters/jwt.service';
 import { IdType } from '../../../core/types/id';
 
-export const optionalAccessTokenGuard = async (req: Request, res: Response, next: NextFunction) => {
+export const optionalAccessTokenGuard = async (req: Request, _: Response, next: NextFunction) => {
   if (!req.headers.authorization) {
     next(); // Продолжаем без пользователя
     return;

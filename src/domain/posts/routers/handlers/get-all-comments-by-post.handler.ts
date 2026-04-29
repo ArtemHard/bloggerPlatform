@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CommentsQueryInput, PostQueryInput } from '../input/post-query.input';
+import { CommentsQueryInput } from '../input/post-query.input';
 import { parseQueryParams } from '../../../../core/utils/query-parser.util';
 import { container } from '../../../../ioc/ioc.container';
 import { TYPES } from '../../../../ioc/ioc.types';

@@ -1,5 +1,4 @@
 import { WithId } from 'mongodb';
-import { Post } from '../../../../blog/validation/types/posts';
 import { CommentType, LikesInfo } from '../../../types';
 import { LikeStatus } from '../../../enums/like-status.enum';
 

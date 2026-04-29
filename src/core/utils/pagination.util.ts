@@ -1,4 +1,4 @@
-import { Filter, SortDirection } from 'mongodb';
+import { Filter } from 'mongodb';
 import { parseQueryParams } from './query-parser.util';
 
 export async function findPaginated<T>(

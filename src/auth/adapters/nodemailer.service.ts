@@ -11,7 +11,6 @@ export const nodemailerService = {
     const logs: string[] = [];
     
     const addLog = (message: string) => {
-      console.log(message);
       logs.push(message);
     };
     

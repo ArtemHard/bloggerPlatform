@@ -6,7 +6,7 @@ import {
   inputValidationResultMiddleware,
 } from '../../core/middlewars/input-validtion-result.middleware';
 import { rateLimitMiddleware } from '../../core/middlewars/rate-limit.middleware';
-import { EmailDto, LoginDto } from '../types/login.dto';
+import { LoginDto } from '../types/login.dto';
 import { container } from '../../ioc/ioc.container';
 import { TYPES } from '../../ioc/ioc.types';
 import { AuthService } from '../domain/auth.service';
@@ -14,8 +14,6 @@ import { jwtService } from '../adapters/jwt.service';
 import { nodemailerService } from '../adapters/nodemailer.service';
 import { emailExamples } from '../adapters/emailExamples';
 import { IUsersQueryRepository } from '../../domain/repositories/types/users-query.repository.interface';
-import { appConfig } from '../../common/config/config';
-import nodemailer from 'nodemailer';
 
 const authService = container.get<AuthService>(TYPES.AuthService);
 const usersQwRepository = container.get<IUsersQueryRepository>(
@@ -30,7 +28,6 @@ import { RequestWithUserId } from '../../core/types/requests';
 import { IdType } from '../../core/types/id';
 import { emailInputDtoValidation } from '../validation/userInputDtoValidation';
 import { CreateUserDto } from '../../domain/users/types/create-user.dto';
-import { createUserSchema } from '../validation/shemas/create-user-shema';
 import { createUserInputDtoValidation } from '../validation/createUserInputDtoValidation';
 import { newPasswordInputDtoValidation } from '../validation/newPasswordValidation';
 import { ValidationError } from '../../core/types/validationError';
@@ -226,29 +223,22 @@ authRouter
     '/password-recovery',
     rateLimitMiddleware,
     async (req: Request<{}, {}, { email: string }>, res: Response) => {
-      console.log('=== PASSWORD RECOVERY REQUEST ===');
       const { email } = req.body;
-      console.log('Request body email:', email);
 
       const errors = emailInputDtoValidation({ email });
 
       if (errors.length > 0) {
-        console.log('Validation errors:', errors);
         return res
           .status(HttpStatus.BadRequest)
           .send(createErrorMessages(errors));
       }
 
-      console.log('Calling authService.passwordRecovery...');
       const result = await authService.passwordRecovery(email);
-      console.log('Password recovery result:', result.status);
 
       if (result.status !== ResultStatus.Success) {
         const statusCode = resultCodeToHttpException(result.status);
-        console.log('Password recovery failed, status:', statusCode);
         return res.status(statusCode).send(result.extensions);
       }
-      console.log('Password recovery successful, returning 204');
       return res.sendStatus(HttpStatus.NoContent);
     },
   )
@@ -293,26 +283,21 @@ authRouter
     '/test-email-send',
     rateLimitMiddleware,
     async (req: Request<{}, {}, { email: string }>, res: Response) => {
-      console.log('=== TEST EMAIL SEND ===');
       const { email } = req.body;
-      console.log('Request body email:', email);
 
       const errors = emailInputDtoValidation({ email });
       if (errors.length > 0) {
-        console.log('Validation errors:', errors);
         return res
           .status(HttpStatus.BadRequest)
           .send(createErrorMessages(errors));
       }
 
-      console.log('Calling nodemailerService.sendEmail...');
       const result = await nodemailerService.sendEmail(
         email,
         'test-code-12345',
         emailExamples.passwordRecoveryEmail,
       );
 
-      console.log('Test email result:', result);
       return res.status(HttpStatus.Ok).json(result);
     },
   );

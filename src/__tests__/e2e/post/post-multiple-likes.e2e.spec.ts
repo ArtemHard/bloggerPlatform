@@ -9,7 +9,7 @@ import { clearDb } from '../../../core/utils/clear-db';
 
 // Mock rate limiting middleware to bypass rate limiting in tests
 jest.mock('../../../core/middlewars/rate-limit.middleware', () => ({
-  rateLimitMiddleware: async (req: any, res: any, next: any) => {
+  rateLimitMiddleware: async (_: any, __: any, next: any) => {
     next();
   },
 }));

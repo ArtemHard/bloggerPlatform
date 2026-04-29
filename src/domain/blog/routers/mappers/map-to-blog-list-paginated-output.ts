@@ -1,6 +1,4 @@
 import { WithId } from 'mongodb';
-import { Post } from '../../validation/types/posts';
-import { PostListPaginatedOutput } from '../output/post-list-paginated-output';
 import { Blog } from '../../validation/types/blog';
 import { BlogListPaginatedOutput } from '../output/blog-list-paginated-output';
 import { mapToBlogViewModel } from './map-to-blog-view-model';

@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { Collection, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { tokensCollection } from '../../db/mongo.db';
 import { ITokensRepository } from '../../domain/repositories/types/tokens.repository.interface';
 

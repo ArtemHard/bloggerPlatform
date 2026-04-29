@@ -1,16 +1,12 @@
 import { inject, injectable } from 'inversify';
 import { WithId } from 'mongodb';
 import { TYPES } from '../../../ioc/ioc.types';
-import { IPostsRepository } from '../../repositories/types/posts.repository.interface';
 import { IBlogsRepository } from '../../repositories/types/blogs.repository.interface';
-import { Post } from '../validation/types/posts';
 import { BlogQueryInput } from '../routers/input/blog-query.input';
-import { BlogInputDto } from '../dto/blog.input-dto';
 import { Blog } from '../validation/types/blog';
 
 @injectable()
 export class BlogService {
-  @inject(TYPES.PostsRepository) private postsRepository!: IPostsRepository;
   @inject(TYPES.BlogsRepository) private blogsRepository!: IBlogsRepository;
 
   constructor() {}

@@ -4,9 +4,8 @@ import { Post } from '../posts/validation/types/posts';
 import { ObjectId, WithId } from 'mongodb';
 import { blogsCollection, postsCollection, usersCollection } from '../../db/mongo.db';
 import { PostQueryInput } from '../posts/routers/input/post-query.input';
-import { findPaginated } from '../../core/utils/pagination.util';
 import { IPostsRepository } from './types/posts.repository.interface';
-import { LikeStatus, LikeDetails, ExtendedLikesInfo, PostLike } from '../posts/validation/types/posts';
+import { LikeStatus, PostLike } from '../posts/validation/types/posts';
 
 @injectable()
 export class PostsRepository implements IPostsRepository {
@@ -18,8 +17,6 @@ export class PostsRepository implements IPostsRepository {
     const { pageNumber, pageSize, sortBy, sortDirection } = queryDto;
     const skip = (pageNumber - 1) * pageSize;
 
-    console.log('Query params:', { pageNumber, pageSize, sortBy, sortDirection, skip });
-    
     try {
       const items = await postsCollection
         .find({})
@@ -28,13 +25,7 @@ export class PostsRepository implements IPostsRepository {
         .limit(pageSize)
         .toArray();
       
-      console.log('Raw posts from DB:', items.length);
-      if (items.length > 0) {
-        console.log('Sample post:', JSON.stringify(items[0], null, 2));
-      }
-      
       const totalCount = await postsCollection.countDocuments({});
-      console.log('Total count:', totalCount);
       
       // Маппим посты с информацией о лайках, передавая userId
     const mappedItems = items.map(post => this.mapPostWithLikesInfo(post, userId));

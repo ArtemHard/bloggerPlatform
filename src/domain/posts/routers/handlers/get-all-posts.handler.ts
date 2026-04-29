@@ -2,13 +2,11 @@ import { Request, Response } from 'express';
 import { container } from '../../../../ioc/ioc.container';
 import { TYPES } from '../../../../ioc/ioc.types';
 import { IPostsRepository } from '../../../repositories/types/posts.repository.interface';
-import { PostLike } from '../../validation/types/posts';
 
 const postsRepository = container.get<IPostsRepository>(TYPES.PostsRepository);
 import { PostQueryInput } from '../input/post-query.input';
 import { PostSortField } from '../input/post-sort-field';
 import { SortDirection } from '../../../../core/types/sort-direction';
-import { parseQueryParams } from '../../../../core/utils/query-parser.util';
 import { mapToPostListPaginatedOutput } from '../../../blog/routers/mappers/map-to-post-list-paginated-output';
 
 export const getAllPostsHandler = async (
@@ -25,7 +23,6 @@ export const getAllPostsHandler = async (
   const userId = req.user?.id;
 
   try {
-    console.log('Using hardcoded query:', hardcodedQuery);
     // Получаем посты без маппинга лайков для начала
     const { items, totalCount } =
       await postsRepository.findAllPosts(hardcodedQuery, userId);

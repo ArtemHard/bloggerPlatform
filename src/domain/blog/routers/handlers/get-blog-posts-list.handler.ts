@@ -3,7 +3,6 @@ import { PostQueryInput } from '../../../posts/routers/input/post-query.input';
 import { container } from '../../../../ioc/ioc.container';
 import { TYPES } from '../../../../ioc/ioc.types';
 import { PostsService } from '../../../posts/application/posts.service';
-import { PostLike } from '../../../posts/validation/types/posts';
 
 const postsService = container.get<PostsService>(TYPES.PostsService);
 import { mapToPostListPaginatedOutput } from '../mappers/map-to-post-list-paginated-output';

@@ -1,4 +1,4 @@
-import { ObjectId, WithId } from 'mongodb';
+import { WithId } from 'mongodb';
 import { inject, injectable } from 'inversify';
 import { QueryParams } from '../../../core/utils/query-parser.util';
 import { IPagination } from '../../../core/types/pagination';
@@ -74,9 +74,5 @@ export class CommentsQueryRepository implements ICommentsQueryRepository {
 
   private _getInView(comment: WithId<CommentType>, currentUserId?: string): CommentViewModel {
     return mapToCommentViewModel(comment, currentUserId);
-  }
-
-  private _checkObjectId(id: string): boolean {
-    return ObjectId.isValid(id);
   }
 }

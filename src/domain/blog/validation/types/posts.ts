@@ -1,4 +1,5 @@
-import { LikeStatus, LikeDetails, ExtendedLikesInfo } from '../../../posts/validation/types/posts';
+
+import { ExtendedLikesInfo } from '../../../posts/validation/types/posts';
 
 export type Post = {
   title: string;

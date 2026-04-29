@@ -1,7 +1,6 @@
 import { injectable } from 'inversify';
 import { ObjectId, WithId } from 'mongodb';
 import {
-  parseQueryParams,
   QueryParams,
 } from '../../../core/utils/query-parser.util';
 import { IPagination } from '../../../core/types/pagination';
@@ -74,9 +73,5 @@ export class UsersQueryRepository implements IUsersQueryRepository {
       email: user.email,
       createdAt: user.createdAt.toISOString(),
     };
-  }
-
-  private _checkObjectId(id: string): boolean {
-    return ObjectId.isValid(id);
   }
 }

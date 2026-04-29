@@ -1,5 +1,4 @@
 import { body } from 'express-validator';
-import { LikeStatus } from './types/posts';
 
 export const likeStatusValidation = body('likeStatus')
   .isString()

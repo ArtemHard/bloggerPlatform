@@ -15,7 +15,6 @@ import {
   expirationDateFunc,
   User,
 } from '../../domain/users/domain/user.entity';
-import e from 'express';
 import { randomUUID } from 'node:crypto';
 import { nodemailerService } from '../adapters/nodemailer.service';
 import { emailExamples } from '../adapters/emailExamples';
@@ -329,14 +328,10 @@ export class AuthService {
   }
 
   async passwordRecovery(email: string): Promise<PromiseResult<any>> {
-    console.log('Password recovery requested for email:', email);
-    
     const user = await this.usersRepository.findByLoginOrEmail(email);
-    console.log('User found:', !!user);
 
     // Always return success for security (prevent email enumeration)
     if (!user) {
-      console.log('User not found, returning success for security');
       return {
         status: ResultStatus.Success,
         data: null,
@@ -345,7 +340,6 @@ export class AuthService {
     }
 
     const newRecoveryCode = randomUUID();
-    console.log('Generated recovery code:', newRecoveryCode);
 
     const updateResult = await this.usersRepository.updatePasswordRecovery({
       id: user._id.toString(),
@@ -353,10 +347,7 @@ export class AuthService {
       expirationDate: expirationDateFunc(),
     });
 
-    console.log('Database update result:', !!updateResult);
-
     if (!updateResult) {
-      console.log('Failed to update recovery code in database');
       return {
         status: ResultStatus.BadRequest,
         data: null,
@@ -367,7 +358,6 @@ export class AuthService {
       };
     }
 
-    console.log('Attempting to send password recovery email...');
     const emailResult = await nodemailerService.sendEmail(
       user.email,
       newRecoveryCode,
@@ -376,8 +366,6 @@ export class AuthService {
     
     if (!emailResult.success) {
       console.error('Password recovery email failed:', emailResult.error);
-    } else {
-      console.log('Password recovery email sent successfully');
     }
 
     return {

@@ -9,7 +9,7 @@ import { clearDb } from '../../../core/utils/clear-db';
 
 // Mock rate limiting middleware to bypass rate limiting in tests
 jest.mock('../../../core/middlewars/rate-limit.middleware', () => ({
-  rateLimitMiddleware: async (req: any, res: any, next: any) => {
+  rateLimitMiddleware: async (_: any, __: any, next: any) => {
     next();
   },
 }));
@@ -154,12 +154,11 @@ describe('Post Duplicate Likes API', () => {
       })
       .expect(HttpStatus.NoContent);
 
-    const firstLikeResponse = await userAuth(accessToken)
+    await userAuth(accessToken)
       .get(`${POSTS_PATH}/${postId}`)
       .expect(HttpStatus.Ok);
 
-    const firstLikeTimestamp = firstLikeResponse.body.extendedLikesInfo.newestLikes[0].addedAt;
-
+    
     // Небольшая задержка чтобы гарантировать разницу во времени
     await new Promise(resolve => setTimeout(resolve, 10));
 
@@ -175,8 +174,7 @@ describe('Post Duplicate Likes API', () => {
       .get(`${POSTS_PATH}/${postId}`)
       .expect(HttpStatus.Ok);
 
-    const secondLikeTimestamp = secondLikeResponse.body.extendedLikesInfo.newestLikes[0].addedAt;
-
+    
     // При дублирующем лайке timestamp может не обновляться, так как система считает это тем же лайком
     // Проверяем что userId остался тем же
     expect(secondLikeResponse.body.extendedLikesInfo.newestLikes[0].userId).toBe(userId);

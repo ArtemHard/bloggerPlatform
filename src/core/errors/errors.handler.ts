@@ -1,7 +1,6 @@
 import { Response } from 'express';
 import { RepositoryNotFoundError } from './repository-not-found.error';
 import { HttpStatus } from '../types/http-statuses';
-import { DomainError } from './domain.error';
 import { createErrorMessages } from '../middlewars/input-validtion-result.middleware';
 
 export function errorsHandler(error: unknown, res: Response): void {
